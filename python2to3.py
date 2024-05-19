@@ -5,6 +5,7 @@ import sys
 
 def is_python2(file_path):
     try:
+        
         # Run the 2to3 tool on the file
         result = subprocess.run(['2to3', file_path],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -12,13 +13,27 @@ def is_python2(file_path):
         # Check if 2to3 suggests any changes
         if "No changes" in result.stderr.decode():
             return False
-        print(result.stderr.decode())
+        #print(result.stderr.decode())
         #print(str(result.stdout))
         
         return True
     except Exception as e:
         print(f"Error processing file {file_path}: {e}")
     return False
+
+def add_shebang(file_path):
+    needsfix = False
+    with open(file_path,"r") as f:
+        content = f.read()
+        if not content.startswith("#!/usr/bin/python3"):
+            print(f"fixed file {file_path}")
+            needsfix = True
+            
+    if needsfix and False:
+        print("fixed")
+        with open(file_path, "w") as f:
+            f.write("#!/usr/bin/python3\n"+content)
+    return
 
 def is_data_folder(file_path):
     if "/data" in file_path:
@@ -31,7 +46,13 @@ def find_python2_files(directory):
         for file in files:
             if file.endswith('.py'):
                 file_path = os.path.join(root, file)
-                if not is_data_folder(file_path) and is_python2(file_path):
+                if "testdata_tools" in file_path:
+                    continue
+                
+                if True:
+                    add_shebang(file_path)
+
+                if False and not is_data_folder(file_path) and is_python2(file_path):
                     #print("fix ", file_path, "?")
                     #y = input("y/n")
                     python2_files.append(file_path)
