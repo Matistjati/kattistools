@@ -1,24 +1,9 @@
 import os
-import subprocess
-import argparse
-import sys
 
-import os
+from kattistools.common import *
+import checker
 
-def node_exists(needle, haystack):
-    return any(needle in path for path in haystack)
 
-def get_nodes(directory):
-    # List all entries in the directory
-    try:
-        entries = os.listdir(directory)
-    except PermissionError:
-        print(f"Permission denied: {directory}")
-        return
-    except FileNotFoundError:
-        print(f"Directory not found: {directory}")
-        return
-    return entries
 
 def categorize_path(path):
     competitions = {}
@@ -47,67 +32,62 @@ def get_prefix(type):
 def get_year(path):
     return path.split("olympiad-")[1][0:4]
 
-def handle_problem(path):
+def notify_rights_owner(line, path):
+    if line.startswith("rights_owner") and line!="rights_owner: Programmeringsolympiaden\n":
+        print(f"rights owner {line} for {path}")
+
+def notify_if_wrong_source(line, path):
+    if line.startswith("source:"):
+        comp = categorize_path(path)
+        year = get_year(path)
+        pref = get_prefix(comp)
+        source = line.split("source:")[1].lstrip()
+        if source[-1]=="\n":
+            source = source[0:-1]
+        if source != pref+year:
+            print(f"ERROR: source '{line}', wanted             '{pref+year}'")
+            print(f"For problem {path}")
+            tryagain = " ".join(source.split(" ")[0:3])
+            if tryagain == pref+year:
+                print("Good if only first 3")
+            print("****\n")
+
+
+class ProblemYamlChecker(checker.Checker):
+    def __init__(self, path):
+        super().__init__("problem.yaml", path)
+        self.handle_problem(path)
     
-    with open(os.path.join(path), "r") as f:
-        for line in f:
-            if line.startswith("name:"):
-                print(f"problem {path} has name {line}")
-            if line.startswith("author:"):
-                if "programmeringsolympiaden" in line.lower():
-                    print(f"problem {path} has PO author")
-            if line.startswith("rights_owner") and line!="rights_owner: Programmeringsolympiaden\n":
-                print(f"rights owner {line} for {path}")
-            continue
-            if line.startswith("source:"):
-                comp = categorize_path(path)
-                year = get_year(path)
-                pref = get_prefix(comp)
-                source = line.split("source:")[1].lstrip()
-                if source[-1]=="\n":
-                    source = source[0:-1]
-                if source != pref+year:
-                    print(f"ERROR: source '{line}', wanted             '{pref+year}'")
-                    print(f"For problem {path}")
-                    tryagain = " ".join(source.split(" ")[0:3])
-                    if tryagain == pref+year:
-                        print("Good if only first 3")
-                    print("****\n")
+    def print_maybe(self, message):
+        self.print_generic("maybe change", message)
+
+    def handle_problem(self, path):
+        # We can assume that problem.yaml exists, since that is precondition to be considred a problem
+        with open(os.path.join(path, "problem.yaml"), "r") as f:
+            # Did we find show_test_data_groups: true ?
+            found_showtestdata = False
+
+            for line in f:
+                if line.startswith("name:"):
+                    self.print_maybe("problem.yaml has name field: \"{line}\"")
+
+                if line.startswith("author:"):
+                    if "programmeringsolympiaden" in line.lower():
+                        self.print_error(f"problem has \"programmeringsolympiaden\" listed as author")
                 
-    #print(f"ERROR: no testdata.yaml for {path}")
+                if True:
+                    notify_rights_owner(line, path)
 
+                if line.lstrip().startswith("on_reject:") or line.lstrip().startswith("range:") or line.lstrip().startswith("objective:"):
+                    print(f"problem {path} has wrong grading {line}")
 
-def walk_through_directories(directory, level=0):
-    """
-    Recursively walk through directories and print all files at each level.
+                if line.lstrip().startswith("show_test_data_groups: true") or \
+                   line.lstrip().startswith("show_test_data_groups: yes"):
+                    found_showtestdata=True
+                
+                if True:
+                    notify_if_wrong_source(line, path)
+                
+        if not found_showtestdata:
+            self.print_error("problem.yaml needs 'show_test_data_groups: true'")
 
-    :param directory: The directory to start walking from.
-    :param level: The current level of depth in the directory tree (used for indentation).
-    """
-    if directory.endswith("testdata_tools"):
-        return
-    entries = get_nodes(directory)
-
-    # Separate files and directories
-    files = [entry for entry in entries if os.path.isfile(os.path.join(directory, entry))]
-    directories = [entry for entry in entries if os.path.isdir(os.path.join(directory, entry))]
-
-    isproblem = node_exists("problem.yaml", files)
-    if isproblem:
-        #print(f"{directory} is problem")
-        handle_problem(os.path.join(directory, "problem.yaml"))
-        return
-
-    for dir in directories:
-        walk_through_directories(os.path.join(directory, dir), level + 1)
-
-# Example usage:
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Find Python 2 files in a directory using 2to3.')
-    parser.add_argument('directory', help='Directory to search for Python 2 files')
-    args = parser.parse_args()
-    
-    directory = args.directory
-    walk_through_directories(directory)
-    
