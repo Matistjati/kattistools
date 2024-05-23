@@ -32,9 +32,6 @@ def get_prefix(type):
 def get_year(path):
     return path.split("olympiad-")[1][0:4]
 
-def notify_rights_owner(line, path):
-    if line.startswith("rights_owner") and line!="rights_owner: Programmeringsolympiaden\n":
-        print(f"rights owner {line} for {path}")
 
 def notify_if_wrong_source(line, path):
     if line.startswith("source:"):
@@ -61,6 +58,11 @@ class ProblemYamlChecker(checker.Checker):
     def print_maybe(self, message):
         self.print_generic("maybe change", message)
 
+    def notify_rights_owner(self, line):
+        if line.startswith("rights_owner") and line!="rights_owner: Programmeringsolympiaden":
+            self.print_maybe(f"rights owner {line}")
+
+
     def handle_problem(self, path):
         # We can assume that problem.yaml exists, since that is precondition to be considred a problem
         with open(os.path.join(path, "problem.yaml"), "r") as f:
@@ -68,6 +70,7 @@ class ProblemYamlChecker(checker.Checker):
             found_showtestdata = False
 
             for line in f:
+                line = line.strip()
                 if line.startswith("name:"):
                     self.print_maybe("problem.yaml has name field: \"{line}\"")
 
@@ -76,10 +79,10 @@ class ProblemYamlChecker(checker.Checker):
                         self.print_error(f"problem has \"programmeringsolympiaden\" listed as author")
                 
                 if True:
-                    notify_rights_owner(line, path)
+                    self.notify_rights_owner(line)
 
                 if line.lstrip().startswith("on_reject:") or line.lstrip().startswith("range:") or line.lstrip().startswith("objective:"):
-                    print(f"problem {path} has wrong grading {line}")
+                    self.print_error(f"wrong grading {line.strip()}")
 
                 if line.lstrip().startswith("show_test_data_groups: true") or \
                    line.lstrip().startswith("show_test_data_groups: yes"):

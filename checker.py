@@ -13,6 +13,3 @@ class Checker:
     def print_warning(self, message):
         self.print_generic("warning!", message)
 
-
-    def check(path):
-        raise NotImplementedError

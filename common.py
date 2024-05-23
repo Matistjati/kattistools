@@ -19,11 +19,13 @@ def get_node_name(node):
 def get_nodes_filter(directory, f):
     return [os.path.join(directory,entry) for entry in get_nodes(directory) if f(os.path.join(directory, entry))]
 
-def get_subdirectiories(directory):
-    return get_nodes_filter(directory, os.path.isdir)
+# Get all folders that are in path
+def get_subdirectiories(path):
+    return get_nodes_filter(path, os.path.isdir)
 
-def get_files(directory):
-    return get_nodes_filter(directory, os.path.isfile)
+# Get all files that are in path
+def get_files(path):
+    return get_nodes_filter(path, os.path.isfile)
 
 def folder_exists(directory, folder_name):
     return os.path.isdir(os.path.join(directory, folder_name))
