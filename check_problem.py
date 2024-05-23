@@ -16,7 +16,7 @@ from kattistools.common import *
 checkers = [SubtaskOrderChecker,
             ProblemYamlChecker,
             CheckScoreMatchesStatement,
-            #CheckPythonShebang,
+            CheckPythonShebang,
             ]
 
 def is_problem(path):

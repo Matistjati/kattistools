@@ -68,6 +68,8 @@ class ProblemYamlChecker(Checker):
         with open(os.path.join(path, "problem.yaml"), "r") as f:
             # Did we find show_test_data_groups: true ?
             found_showtestdata = False
+            # Did we find type: scoring ?
+            found_scoring = False
 
             for line in f:
                 line = line.strip()
@@ -88,9 +90,15 @@ class ProblemYamlChecker(Checker):
                    line.lstrip().startswith("show_test_data_groups: yes"):
                     found_showtestdata=True
                 
+                if line.lstrip().startswith("type: scoring"):
+                    found_scoring=True
+                
                 if True:
                     notify_if_wrong_source(line, path)
                 
         if not found_showtestdata:
             self.print_error("problem.yaml needs 'show_test_data_groups: true'")
+
+        if not found_scoring:
+            self.print_error("problem.yaml needs 'type: scoring'")
 
