@@ -1,9 +1,9 @@
 import os
 
 from kattistools.common import *
-import checker
+from kattistools.checkers.checker import Checker
 
-class CheckPythonShebang(checker.Checker):
+class CheckPythonShebang(Checker):
     def __init__(self, path):
         super().__init__("check python has shebang", path)
         self.handle_problem(path)

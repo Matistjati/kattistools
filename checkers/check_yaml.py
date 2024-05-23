@@ -1,7 +1,7 @@
 import os
 
 from kattistools.common import *
-import checker
+from kattistools.checkers.checker import Checker
 
 
 
@@ -50,7 +50,7 @@ def notify_if_wrong_source(line, path):
             print("****\n")
 
 
-class ProblemYamlChecker(checker.Checker):
+class ProblemYamlChecker(Checker):
     def __init__(self, path):
         super().__init__("problem.yaml", path)
         self.handle_problem(path)

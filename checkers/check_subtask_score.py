@@ -1,7 +1,7 @@
 import os
 
 from kattistools.common import *
-import checker
+from kattistools.checkers.checker import Checker
 
 def get_secret_scores(path):
     secretgroups = get_subdirectiories(path)
@@ -57,7 +57,7 @@ def get_statement_scores(path):
     
     return statement_scores[0]
 
-class CheckScoreMatchesStatement(checker.Checker):
+class CheckScoreMatchesStatement(Checker):
     def __init__(self, path):
         super().__init__("scores match statement", path)
         self.handle_problem(path)

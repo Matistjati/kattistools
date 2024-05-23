@@ -1,9 +1,9 @@
 import os
 
 from kattistools.common import *
-import checker
+from kattistools.checkers.checker import Checker
 
-class SubtaskOrderChecker(checker.Checker):
+class SubtaskOrderChecker(Checker):
     def __init__(self, path):
         super().__init__("subtask order", path)
         self.handle_problem(path)
