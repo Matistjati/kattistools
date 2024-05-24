@@ -9,9 +9,10 @@ class CheckPythonShebang(Checker):
         self.handle_problem(path)
 
     def handle_problem(self, path):
-        # We don't care about generator python 2/3
-        if path.endswith("data"):
+        # We don't care about generators or submissions python 2/3
+        if path.endswith("data") or path.endswith("submissions"):
             return
+
         python_files = [file for file in get_files(path) if file.endswith(".py")]
 
         for file in python_files:

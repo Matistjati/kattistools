@@ -24,6 +24,7 @@ def categorize_path(path):
         if c in path:
             return realc
     print(f"ERROR! can't find competition type for {path}")
+    return "ERROR"
 
 def get_prefix(type):
     ret = "Programmeringsolympiadens "
@@ -74,7 +75,7 @@ class ProblemYamlChecker(Checker):
             for line in f:
                 line = line.strip()
                 if line.startswith("name:"):
-                    self.print_maybe("problem.yaml has name field: \"{line}\"")
+                    self.print_maybe(f"problem.yaml has name field: \"{line}\"")
 
                 if line.startswith("author:"):
                     if "programmeringsolympiaden" in line.lower():

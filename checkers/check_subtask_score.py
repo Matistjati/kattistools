@@ -31,8 +31,13 @@ def get_statement_scores(path):
         scores = []
         with open(stpath, "r") as f:
             inside_box = False
+            seen_output = False
             counter = 1
             for line in f:
+                if line.startswith("\section*{Utdata}") or line.startswith("\section*{Output}"):
+                    seen_output=True
+                if not seen_output:
+                    continue
                 if line.startswith("\\begin{tabular}"):
                     inside_box = True
                 if inside_box:
