@@ -1,15 +1,20 @@
+from kattistools.common import *
+
 
 class Checker:
     def __init__(self, name, path):
         self.name = name
         self.path = path
+        self.errors = {}
 
     def print_generic(self, kind, message):
-        print(f"{kind} {message} ({self.name}), at {self.path}")
+        if kind not in self.errors:
+            self.errors[kind] = []
+        self.errors[kind].append(message)
 
     def print_error(self, message):
-        self.print_generic("ERROR!", message)
+        self.print_generic("Errors:", message)
 
     def print_warning(self, message):
-        self.print_generic("warning!", message)
+        self.print_generic("Warnings:", message)
 

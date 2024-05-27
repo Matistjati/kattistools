@@ -32,3 +32,6 @@ def folder_exists(directory, folder_name):
 
 def file_exists(directory, file_name):
     return os.path.isfile(os.pardir.join(directory, file_name))
+
+def split_path(path):
+    return os.path.normpath(path).split(os.path.sep)

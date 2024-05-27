@@ -56,10 +56,10 @@ class SubtaskOrderChecker(Checker):
 
         if len(secret_groups) != len(generator_group_names):
             self.print_error("Number of groups in generator and secret mismatch")
-            print(f"secret: {secret_groups}, generator: {generator_group_names}")
+            self.print_error(f"secret: {secret_groups}, generator: {generator_group_names}")
             return
         
         if secret_groups!=generator_group_names:
             self.print_error("Order of groups in generator and secret mismatch")
-            print(f"secret: {secret_groups}, gen: {generator_group_names}")
+            self.print_error(f"secret: {secret_groups}, gen: {generator_group_names}")
 

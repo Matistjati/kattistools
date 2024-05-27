@@ -19,7 +19,7 @@ class CheckPythonShebang(Checker):
             with open(file,"r") as f:
                 for line in f:
                     if not line.startswith("#!/usr/bin/python3") and not line.startswith("#!/usr/bin/env python3"):
-                        self.print_warning(f"py file {file} does not start with shebang #!/usr/bin/python3")
+                        self.print_warning(f"py file '{'/'.join(split_path(path)[-2:])}' does not start with shebang #!/usr/bin/python3")
                     break
         
         for child in get_subdirectiories(path):

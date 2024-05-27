@@ -5,26 +5,6 @@ from kattistools.checkers.checker import Checker
 
 
 
-def categorize_path(path):
-    competitions = {}
-    competitions["skolkval/"]="skolkval"
-    competitions["skol/"]="skolkval"
-    competitions["onlinekval/"]="onlinekval"
-    competitions["online/"]="onlinekval"
-    competitions["katt/"]="KATT"
-    competitions["katt1/"]="KATT"
-    competitions["katt2/"]="KATT"
-    competitions["katt3/"]="KATT"
-    competitions["district"] = "distriktsmästerskap"
-    competitions["lager/"]="lägertävling"
-    competitions["final/"]="final"
-    competitions["langtavling/"]="långtävling"
-
-    for c, realc in competitions.items():
-        if c in path:
-            return realc
-    print(f"ERROR! can't find competition type for {path}")
-    return "ERROR"
 
 def get_prefix(type):
     ret = "Programmeringsolympiadens "
@@ -34,20 +14,6 @@ def get_year(path):
     return path.split("olympiad-")[1][0:4]
 
 
-def notify_if_wrong_source(line, path):
-    if line.startswith("source:"):
-        comp = categorize_path(path)
-        year = get_year(path)
-        pref = get_prefix(comp)
-        source = line.split("source:")[1].lstrip()
-        if source[-1]=="\n":
-            source = source[0:-1]
-        if source != pref+year:
-            print(f"ERROR: source is '{line}', want '{pref+year}'")
-            print(f"For problem {path}")
-            tryagain = " ".join(source.split(" ")[0:3])
-            if tryagain == pref+year:
-                print("Good if we only consider prefix")
 
 
 class ProblemYamlChecker(Checker):
@@ -68,6 +34,43 @@ class ProblemYamlChecker(Checker):
         if line.startswith("rights_owner") and line!="rights_owner: Programmeringsolympiaden":
             self.print_maybe(f"rights owner {line}")
 
+    def categorize_path(self, path):
+        competitions = {}
+        competitions["skolkval/"]="skolkval"
+        competitions["skol/"]="skolkval"
+        competitions["onlinekval/"]="onlinekval"
+        competitions["online/"]="onlinekval"
+        competitions["katt/"]="KATT"
+        competitions["katt1/"]="KATT"
+        competitions["katt2/"]="KATT"
+        competitions["katt3/"]="KATT"
+        competitions["district"] = "distriktsmästerskap"
+        competitions["lager/"]="lägertävling"
+        competitions["final/"]="final"
+        competitions["langtavling/"]="långtävling"
+
+        for c, realc in competitions.items():
+            if c in path:
+                return realc
+        self.print_error(f"can't find competition type for \"{split_path(path)[-2]}\"")
+        return "ERROR"
+
+
+    def notify_if_wrong_source(self, line, path):
+        if not "swedish-olympiad" in path:
+            return
+        if line.startswith("source:"):
+            comp = self.categorize_path(path)
+            year = get_year(path)
+            pref = get_prefix(comp)
+            source = line.split("source:")[1].lstrip()
+            if source[-1]=="\n":
+                source = source[0:-1]
+            if "#" in source:
+                source = source.split("#")[0].strip()
+            if source != pref+year:
+                self.print_error(f"source is '{line.split('source: ')[1]}', want '{pref+year}'")
+
 
     def handle_problem(self, path):
         # We can assume that problem.yaml exists, since that is precondition to be considred a problem
@@ -77,11 +80,11 @@ class ProblemYamlChecker(Checker):
                 line = line.strip()
                 lines.append(line)
                 
-                if True:
+                if False:
                     self.notify_rights_owner(line)
 
                 if True:
-                    notify_if_wrong_source(line, path)
+                    self.notify_if_wrong_source(line, path)
         
         if not self.any_begins(lines, "show_test_data_groups: true") and \
            not self.any_begins(lines, "show_test_data_groups: yes"):
@@ -95,6 +98,7 @@ class ProblemYamlChecker(Checker):
         if self.any_begins_case_insensitive(lines, "author: programmeringsolympiaden") or \
            self.any_begins_case_insensitive(lines, "author:programmeringsolympiaden"):
             self.print_error("problem.yaml, having programmeringsolympiaden as author is bas practice")
+
 
         if not self.any_begins(lines, "type: scoring"):
             self.print_error("problem.yaml must have 'type: scoring'")

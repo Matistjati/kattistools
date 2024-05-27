@@ -32,8 +32,21 @@ def directory_dfs(path):
 
     is_problem = os.path.isfile(os.path.join(path, "problem.yaml"))
     if is_problem:
+        errors = {}
         for check in checkers:
-            check(path)
+            checker = check(path)
+            for error_name, error_list in checker.errors.items():
+                error_list = [f"{i} ({checker.name})" for i in error_list]
+                if error_name not in errors:
+                    errors[error_name] = []
+                errors[error_name] += error_list
+            
+        if errors:
+            print(f"\"{get_node_name(path)}\" potential errors ({os.path.normpath(path).split(os.path.sep)[-2]}):")
+            for error, error_list in errors.items():
+                print(error)
+                print("\n".join(error_list))
+            print("*****\n\n")
         return
 
     children = get_subdirectiories(path)
