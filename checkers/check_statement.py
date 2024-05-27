@@ -28,6 +28,9 @@ class CheckStatement(Checker):
             self.print_error("missing \section*{Indata}")
         if not self.any_begins(lines, "\section*{Utdata}"):
             self.print_error("missing \section*{Utdata}")
+        if not self.any_begins(lines, "Din lösning kommer att testas på en mängd testfallsgrupper.") \
+        and not self.any_begins(lines, "Din lösning kommer att testas på flera testfall."):
+            self.print_error("Missing poängsättning-section")
 
     def handle_english(self, path):
         lines = self.get_lines(path)

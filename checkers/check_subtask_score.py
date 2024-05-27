@@ -34,7 +34,11 @@ def get_statement_scores(path):
             seen_output = False
             counter = 1
             for line in f:
-                if line.startswith("\section*{Utdata}") or line.startswith("\section*{Output}"):
+                if line.startswith("Din lösning kommer att testas på flera testfall. För att få 100 poäng så måste du klara alla testfall."):
+                    scores.append(100)
+
+                if line.startswith("\section*{Utdata}") or line.startswith("\section*{Output}") \
+                    or line.startswith("\section*{Udskrift}"):
                     seen_output=True
                 if not seen_output:
                     continue
@@ -53,12 +57,15 @@ def get_statement_scores(path):
                         counter+=1
                 if line.startswith("\\end{tabular}"):
                     inside_box = False
+        if not seen_output:
+            print(f"Could not find output section for statement {stpath}")
         statement_scores.append(scores)
     good = True
     for i in statement_scores:
         good &= i==statement_scores[0]
     if not good:
         print(f"different statements disagree on scores for {path}")
+        print(statement_scores)
     
     return statement_scores[0]
 
