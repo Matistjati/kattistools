@@ -74,18 +74,26 @@ class CheckStatement(Checker):
             self.print_warning("Did you forget \"No additional constraints.\" in subtask box?")
 
  
-    def handle_all(self, path):
+    def handle_all(self, path, language):
         lines = self.get_lines(path)
         
-        forbidden_quote = ["’", "\""]
-        for quote in forbidden_quote:
-            if self.any_has(lines, quote):
-                word = [i for i in lines if i.count(quote)>1]
+        forbidden_quotes = [("’","’"), ("\"","\""), ("``", "''")]
+        correct_quote = ("”","”")
+        if language=="sv":
+            correct_quote = ("”","”")
+            forbidden_quotes.append(("``", "''"))
+        if language=="en":
+            correct_quote = ("``", "''")
+            forbidden_quotes.append(("”","”"))
+        for quote in forbidden_quotes:
+            if self.any_has(lines, quote[0]):
+                word = [i for i in lines if i.count(quote[0])>0]
                 if len(word)==0:
-                    self.print_error(f"Don't use {quote}word{quote}, use ``word'' instead")
+                    print(word)
+                    self.print_error(f"Don't use {quote[0]}word{quote[1]}, use {correct_quote[0]}word{correct_quote[1]} instead")
                 else:
-                    word = word[0].split(quote)[1].split(quote)[0]
-                    self.print_error(f"Don't use {quote}{word}{quote}, use ``{word}'' instead")
+                    word = word[0].split(quote[0])[1].split(quote[1])[0]
+                    self.print_error(f"Don't use {quote[0]}{word}{quote[1]}, use {correct_quote[0]}{word}{correct_quote[1]} instead")
 
 
     def handle_problem(self, path):
@@ -103,9 +111,13 @@ class CheckStatement(Checker):
             name = os.path.basename(statement)
             if name.count(".")==1:
                 self.print_error("Statement with only .tex")
+            language = None
+
             if ".sv" in statement:
+                language = "sv"
                 self.handle_swedish(statement)
             if ".en" in statement:
+                language = "en"
                 self.handle_english(statement)
-            self.handle_all(statement)
+            self.handle_all(statement, language)
 

@@ -1,0 +1,2 @@
+check if swedish title has capitalized words that should not be
+
