@@ -7,14 +7,14 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-from checkers.check_subtask_order import SubtaskOrderChecker
+from checkers.check_generator import GeneratorChecker
 from checkers.check_yaml import ProblemYamlChecker
 from checkers.check_subtask_score import CheckScoreMatchesStatement
 from checkers.check_shebang import CheckPythonShebang
 from checkers.check_statement import CheckStatement
 from kattistools.common import *
 
-checkers = [SubtaskOrderChecker,
+checkers = [GeneratorChecker,
             ProblemYamlChecker,
             CheckScoreMatchesStatement,
             CheckPythonShebang,

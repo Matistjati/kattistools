@@ -77,14 +77,14 @@ class CheckStatement(Checker):
     def handle_all(self, path, language):
         lines = self.get_lines(path)
         
-        forbidden_quotes = [("’","’"), ("\"","\""), ("``", "''")]
+        forbidden_quotes = [("’","’"), ("\"","\""), ("``", "''"), ("”", "”")]
         correct_quote = ("”","”")
         if language=="sv":
-            correct_quote = ("”","”")
+            correct_quote = ("''","''")
             forbidden_quotes.append(("``", "''"))
         if language=="en":
             correct_quote = ("``", "''")
-            forbidden_quotes.append(("”","”"))
+            forbidden_quotes.append(("''","''"))
         for quote in forbidden_quotes:
             if self.any_has(lines, quote[0]):
                 word = [i for i in lines if i.count(quote[0])>0]

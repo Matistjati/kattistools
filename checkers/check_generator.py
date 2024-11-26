@@ -3,9 +3,9 @@ import os
 from kattistools.common import *
 from kattistools.checkers.checker import Checker
 
-class SubtaskOrderChecker(Checker):
+class GeneratorChecker(Checker):
     def __init__(self, path):
-        super().__init__("subtask order", path)
+        super().__init__("Check generator", path)
         self.handle_problem(path)
 
     def is_generator(self, path):
@@ -38,6 +38,14 @@ class SubtaskOrderChecker(Checker):
         if gen is None:
             self.print_warning("Couldn't find generator for problem")
             return
+        
+
+        # Check that there is no REQUIRE_SAMPLE_REUSE
+        with open(gen, "r") as f:
+            for line in f:
+                if line.startswith("REQUIRE_SAMPLE_REUSE=0"):
+                    self.print_error("Generator has REQUIRE_SAMPLE_REUSE=0")
+
         
         generator_group_names = []
         with open(gen, "r") as f:
