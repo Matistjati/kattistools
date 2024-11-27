@@ -36,21 +36,21 @@ class CheckStatement(Checker):
     def parse_swedish_subtask_box(self, path):
         lines = self.read_file(path)
         if not self.any_begins(lines, "Din lösning kommer att testas på en mängd testfallsgrupper."):
-            self.print_error("Missing poängsättning-section")
+            self.print_error("(sv) Missing poängsättning-section")
             
         if True and not self.any_has(lines, "\\textbf{Grupp}"):
-            self.print_warning(f"missing modern subtask box {get_node_name(path)}")
+            self.print_warning(f"(sv) missing modern subtask box {get_node_name(path)}")
             return
         
         if not self.any_has(lines, "Inga ytterligare begränsningar."):
-            self.print_warning("Did you forget \"Inga ytterligare begränsningar.\" in subtask box?")
+            self.print_warning("(sv) Did you forget \"Inga ytterligare begränsningar.\" in subtask box?")
 
     def handle_swedish(self, path):
         lines = self.get_lines(path)
         if not self.is_interactive and not self.any_begins(lines, "\section*{Indata}"):
-            self.print_error("missing \section*{Indata}")
+            self.print_error("(sv) missing \section*{Indata}")
         if not self.is_interactive and not self.any_begins(lines, "\section*{Utdata}"):
-            self.print_error("missing \section*{Utdata}")
+            self.print_error("(sv) missing \section*{Utdata}")
         
         
 
@@ -59,41 +59,65 @@ class CheckStatement(Checker):
         if not no_subtasks:
             self.parse_swedish_subtask_box(path)
  
+    def parse_english_subtask_box(self, path):
+        lines = self.read_file(path)
+
+        if not self.any_begins(lines, r"\section*{Scoring}"):
+            self.print_error(r"(en) Missing \section*{Scoring}")
+
+        if not self.any_begins(lines, "Your solution will be tested on a set of test groups, each worth a number of points. Each test group contains"):
+            self.print_error("(en) Missing scoring text")
+        
+        if True and not self.any_has(lines, "\\textbf{Group}"):
+            self.print_error(f"(en) missing modern subtask box {get_node_name(path)}")
+        
+        if not self.any_has(lines, "No additional constraints."):
+            self.print_warning("(en) Did you forget \"No additional constraints.\" in subtask box?")
 
     def handle_english(self, path):
         lines = self.get_lines(path)
         if not self.is_interactive and not self.any_begins(lines, "\section*{Input}"):
-            self.print_error("missing \section*{Input}")
+            self.print_error("(en) missing \section*{Input}")
         if not self.is_interactive and not self.any_begins(lines, "\section*{Output}"):
-            self.print_error("missing \section*{Output}")
+            self.print_error("(en) missing \section*{Output}")
         
-        if True and not self.any_has(lines, "\\textbf{Group}"):
-            self.print_error(f"missing modern subtask box {get_node_name(path)}")
 
-        if not self.any_has(lines, "No additional constraints."):
-            self.print_warning("Did you forget \"No additional constraints.\" in subtask box?")
+        no_subtasks = self.any_begins(lines, "Your solution will be tested on multiple testcases.")
+        # If that line is present, do not look for subtask box
+        if not no_subtasks:
+            self.parse_english_subtask_box(path)
 
  
     def handle_all(self, path, language):
         lines = self.get_lines(path)
         
-        forbidden_quotes = [("’","’"), ("\"","\""), ("``", "''"), ("”", "”")]
-        correct_quote = ("”","”")
+        forbidden_quotes = [("’","’"), ("\"","\""), ("”", "”")]
         if language=="sv":
             correct_quote = ("''","''")
             forbidden_quotes.append(("``", "''"))
         if language=="en":
             correct_quote = ("``", "''")
             forbidden_quotes.append(("''","''"))
+
         for quote in forbidden_quotes:
             if self.any_has(lines, quote[0]):
-                word = [i for i in lines if i.count(quote[0])>0]
-                if len(word)==0:
-                    print(word)
-                    self.print_error(f"Don't use {quote[0]}word{quote[1]}, use {correct_quote[0]}word{correct_quote[1]} instead")
-                else:
-                    word = word[0].split(quote[0])[1].split(quote[1])[0]
-                    self.print_error(f"Don't use {quote[0]}{word}{quote[1]}, use {correct_quote[0]}{word}{correct_quote[1]} instead")
+                ln = [i for i in lines if i.count(quote[0])>0]
+                if len(ln)==0:
+                    self.print_error(f"({language}) Don't use {quote[0]}word{quote[1]}, use {correct_quote[0]}word{correct_quote[1]} instead")
+
+                unique_w = set()
+                for w in ln:
+                    wl = quote[0].join(w.split(quote[0])[1:])
+
+                    if wl.count(quote[1]) == 0:
+                        continue
+                    word = wl.split(quote[1])[0]
+                    if correct_quote[0] in word:
+                        continue
+                    unique_w.add(word)
+
+                for w in unique_w:
+                    self.print_error(f"({language}) Don't use {quote[0]}{w}{quote[1]}, use {correct_quote[0]}{w}{correct_quote[1]} instead")
 
 
     def handle_problem(self, path):
