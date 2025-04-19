@@ -19,7 +19,6 @@ class CheckPythonShebang(Checker):
             with open(file,"r") as f:
                 for line in f:
                     if not line.startswith("#!/usr/bin/python3") and not line.startswith("#!/usr/bin/env python3"):
-                        print(file)
                         self.print_warning(f"py file '{'/'.join(split_path(file)[-2:])}' does not start with shebang #!/usr/bin/python3")
                     break
         

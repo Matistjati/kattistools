@@ -38,7 +38,7 @@ class CheckStatement(Checker):
         if not self.any_begins(lines, "Din lösning kommer att testas på en mängd testfallsgrupper."):
             self.print_error("(sv) Missing poängsättning-section")
             
-        if True and not self.any_has(lines, "\\textbf{Grupp}"):
+        if True and not self.any_has(lines, r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline"):
             self.print_warning(f"(sv) missing modern subtask box {get_node_name(path)}")
             return
         
@@ -68,7 +68,7 @@ class CheckStatement(Checker):
         if not self.any_begins(lines, "Your solution will be tested on a set of test groups, each worth a number of points. Each test group contains"):
             self.print_error("(en) Missing scoring text")
         
-        if True and not self.any_has(lines, "\\textbf{Group}"):
+        if True and not self.any_has(lines, r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"):
             self.print_error(f"(en) missing modern subtask box {get_node_name(path)}")
         
         if not self.any_has(lines, "No additional constraints."):
@@ -112,6 +112,7 @@ class CheckStatement(Checker):
                     if wl.count(quote[1]) == 0:
                         continue
                     word = wl.split(quote[1])[0]
+
                     if correct_quote[0] in word:
                         continue
                     unique_w.add(word)

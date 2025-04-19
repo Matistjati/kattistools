@@ -12,13 +12,15 @@ from checkers.check_yaml import ProblemYamlChecker
 from checkers.check_subtask_score import CheckScoreMatchesStatement
 from checkers.check_shebang import CheckPythonShebang
 from checkers.check_statement import CheckStatement
+from checkers.check_statement_files import CheckStatementFiles
 from kattistools.common import *
 
 checkers = [GeneratorChecker,
             ProblemYamlChecker,
             CheckScoreMatchesStatement,
             CheckPythonShebang,
-            CheckStatement
+            CheckStatement,
+            CheckStatementFiles
             ]
 
 def is_problem(path):
@@ -26,6 +28,7 @@ def is_problem(path):
 
 excluded_dirs = [".git", "testdata_tools"]
 
+# Each checker is involved in the root of each problem exactly once
 def directory_dfs(path):
     if any(path.endswith(exclude) for exclude in excluded_dirs):
         return
