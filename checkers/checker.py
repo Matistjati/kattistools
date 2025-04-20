@@ -13,8 +13,8 @@ class Checker:
         self.errors[kind].append(message)
 
     def print_error(self, message):
-        self.print_generic("Errors:", message)
+        self.print_generic("[red]Errors:[/red]", message)
 
     def print_warning(self, message):
-        self.print_generic("Warnings:", message)
+        self.print_generic("[#FFFF00]Warnings:[/#FFFF00]", message)
 

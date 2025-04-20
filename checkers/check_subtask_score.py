@@ -64,6 +64,9 @@ class CheckScoreMatchesStatement(Checker):
                         inside_box = False
 
             statement_scores.append(scores)
+        if len(statement_scores)==0:
+            self.print_error(f"Did not manage to find subtask scores in {path}")
+            return None
         good = True
         for i in statement_scores:
             good &= i==statement_scores[0]

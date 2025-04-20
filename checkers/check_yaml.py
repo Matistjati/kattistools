@@ -80,9 +80,6 @@ class ProblemYamlChecker(Checker):
                 line = line.strip()
                 lines.append(line)
                 
-                if False:
-                    self.notify_rights_owner(line)
-
                 if True:
                     self.notify_if_wrong_source(line, path)
         
@@ -103,5 +100,6 @@ class ProblemYamlChecker(Checker):
         if not self.any_begins(lines, "type: scoring"):
             self.print_error("problem.yaml must have 'type: scoring'")
 
-        
-
+        for line in lines:
+            if line.startswith("author:") and "&" in line:
+                self.print_error("Use comma to separate author names, not &")

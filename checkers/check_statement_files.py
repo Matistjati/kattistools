@@ -9,7 +9,7 @@ import re
 
 class CheckStatementFiles(Checker):
     def __init__(self, path):
-        super().__init__("statement", path)
+        super().__init__("Statement files", path)
         self.handle_problem(path)
     
     def handle_problem(self, path):

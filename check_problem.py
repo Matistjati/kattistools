@@ -1,7 +1,10 @@
 import os
 import subprocess
+from pathlib import Path
 import argparse
 import sys
+
+from rich.console import Console
 
 # Add the parent directory of 'kattistools' to the system path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -23,10 +26,27 @@ checkers = [GeneratorChecker,
             CheckStatementFiles
             ]
 
-def is_problem(path):
-    return 
+def is_interactive(path):
+    with open(Path(path) / "problem.yaml", "r") as f:
+        return "interactive" in f.read()
 
 excluded_dirs = [".git", "testdata_tools"]
+
+console = Console()
+def print_errors(path, errors):
+    special = []
+    if is_interactive(path):
+        special.append("interactive")
+    if (Path(path) / "graders").exists():
+        special.append("grader")
+    if (Path(path) / "include").exists():
+        special.append("include")
+    interactive_msg = f" ({', '.join(special)})" if special else ""
+    console.print(f"> {Path(path).parent.name}/[#52b2f7]{get_node_name(path)}[/#52b2f7]{interactive_msg}:")
+    for error, error_list in reversed(sorted(errors.items())):
+        console.print(error)
+        console.print("\n".join(error_list))
+    console.print("--------------\n\n")
 
 # Each checker is involved in the root of each problem exactly once
 def directory_dfs(path):
@@ -45,11 +65,7 @@ def directory_dfs(path):
                 errors[error_name] += error_list
             
         if errors:
-            print(f"\"{get_node_name(path)}\" potential errors ({os.path.normpath(path).split(os.path.sep)[-2]}):")
-            for error, error_list in errors.items():
-                print(error)
-                print("\n".join(error_list))
-            print("*****\n\n")
+            print_errors(path, errors)
         return
 
     children = get_subdirectiories(path)
@@ -63,5 +79,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     directory = args.directory
+    if not Path(directory).exists():
+        console.print(f"[red]Error[/red]: folder {directory} does not exist")
+        sys.exit(0)
     directory_dfs(directory)
     

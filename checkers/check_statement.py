@@ -95,9 +95,11 @@ class CheckStatement(Checker):
         if language=="sv":
             correct_quote = ("''","''")
             forbidden_quotes.append(("``", "''"))
-        if language=="en":
+        elif language=="en":
             correct_quote = ("``", "''")
             forbidden_quotes.append(("''","''"))
+        else:
+            return
 
         for quote in forbidden_quotes:
             if self.any_has(lines, quote[0]):
