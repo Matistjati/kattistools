@@ -93,7 +93,9 @@ class CheckScoreMatchesStatement(Checker):
             return
         secret_path = os.path.join(data_path, "secret")
         secretscores = self.get_secret_scores(secret_path)
-        
+        if sum(secretscores) != 0:
+            self.print_warning(f"secret: total score is not 100, is {sum(secretscores)}")
+
         statement_path = os.path.join(path, "problem_statement")
         statement_scores = self.get_statement_scores(statement_path)
 
