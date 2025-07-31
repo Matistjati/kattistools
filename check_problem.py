@@ -34,6 +34,8 @@ def is_interactive(path):
 
 excluded_dirs = [".git", "testdata_tools"]
 
+silentmode = False
+
 console = Console()
 def print_errors(path, errors):
     special = []
@@ -48,15 +50,24 @@ def print_errors(path, errors):
     for error, error_list in reversed(sorted(errors.items())):
         console.print(error)
         console.print("\n".join(error_list))
-    console.print("--------------\n\n")
+    console.print("--------------\n")
 
 # Each checker is involved in the root of each problem exactly once
-def directory_dfs(path):
+def directory_dfs(path, ignoredproblems):
     if any(path.endswith(exclude) for exclude in excluded_dirs):
         return
 
     is_problem = os.path.isfile(os.path.join(path, "problem.yaml"))
+
     if is_problem:
+        if Path(path).name in ignoredproblems:
+            if silentmode:
+                return 
+            console.print(f"Skipping [#52b2f7]{Path(path).name}[/#52b2f7] as it is in the ignore list.")
+            console.print("--------------\n")
+            return
+
+
         errors = {}
         for check in checkers:
             checker = check(path)
@@ -72,17 +83,25 @@ def directory_dfs(path):
 
     children = get_subdirectiories(path)
     for dir in reversed(sorted(children)):
-        directory_dfs(dir)
+        directory_dfs(dir, ignoredproblems)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Stylecheck PO problems')
     parser.add_argument('directory', help='Directory to recursively stylecheck')
+    parser.add_argument("-s", "-i", "--skip", "--ignore", metavar='PROBLEM ID', nargs="*", help='Problem IDs to ignore')
+    parser.add_argument("-silent", action="store_true", help='Only print warnings and errors')
+
     args = parser.parse_args()
-    
+
+    ignoredproblems = set(args.skip) if args.skip else set()
+
+    silentmode = args.silent
+
     directory = args.directory
     if not Path(directory).exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(0)
-    directory_dfs(directory)
+
+    directory_dfs(directory, ignoredproblems)
     
