@@ -36,9 +36,9 @@ class CheckStatement(Checker):
     def parse_swedish_subtask_box(self, path):
         lines = self.read_file(path)
         if not self.any_begins(lines, "Din lösning kommer att testas på en mängd testfallsgrupper."):
-            self.print_error("(sv) Missing poängsättning-section")
+            self.print_warning("(sv) Missing poängsättning-section")
             
-        if True and not self.any_has(lines, r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline"):
+        if not self.any_has(lines, r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline"):
             self.print_warning(f"(sv) missing modern subtask box {get_node_name(path)}")
             return
         
@@ -63,13 +63,13 @@ class CheckStatement(Checker):
         lines = self.read_file(path)
 
         if not self.any_begins(lines, r"\section*{Scoring}"):
-            self.print_error(r"(en) Missing \section*{Scoring}")
+            self.print_warning(r"(en) Missing \section*{Scoring}")
 
         if not self.any_begins(lines, "Your solution will be tested on a set of test groups, each worth a number of points. Each test group contains"):
-            self.print_error("(en) Missing scoring text")
+            self.print_warning("(en) Missing scoring text")
         
         if True and not self.any_has(lines, r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"):
-            self.print_error(f"(en) missing modern subtask box {get_node_name(path)}")
+            self.print_warning(f"(en) missing modern subtask box {get_node_name(path)}")
         
         if not self.any_has(lines, "No additional constraints."):
             self.print_warning("(en) Did you forget \"No additional constraints.\" in subtask box?")
@@ -90,7 +90,24 @@ class CheckStatement(Checker):
  
     def handle_all(self, path, language):
         lines = self.get_lines(path)
-        
+
+        total_len = sum(len(line) for line in lines)
+        if total_len<=100:
+            self.print_warning(f"({language} statement is unreasonably short ({total_len} chars)")
+
+        weird_quotes = ["’", "’"]
+        for quote in weird_quotes:
+            if self.any_has(lines, quote):
+                self.print_error(f"({language}) Don't use {quote}")
+
+        all_quotes = ["’", "’", "\"", "”", "''", "``"]
+        for quote in all_quotes:
+            if self.any_has(lines, f",{quote}"):
+                self.print_error(f"({language}) Chatgpt error: ,{quote} occurs")
+            
+            if self.any_has(lines, f".{quote}"):
+                self.print_error(f"({language}) Chatgpt error: .{quote} occurs")
+
         forbidden_quotes = [("’","’"), ("\"","\""), ("”", "”")]
         if language=="sv":
             correct_quote = ("''","''")

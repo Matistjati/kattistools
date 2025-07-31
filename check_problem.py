@@ -15,7 +15,8 @@ from checkers.check_yaml import ProblemYamlChecker
 from checkers.check_subtask_score import CheckScoreMatchesStatement
 from checkers.check_shebang import CheckPythonShebang
 from checkers.check_statement import CheckStatement
-from checkers.check_statement_files import CheckStatementFiles
+from checkers.check_files import CheckFiles
+from checkers.check_has_languages import CheckStatementLanguages
 from kattistools.common import *
 
 checkers = [GeneratorChecker,
@@ -23,7 +24,8 @@ checkers = [GeneratorChecker,
             CheckScoreMatchesStatement,
             CheckPythonShebang,
             CheckStatement,
-            CheckStatementFiles
+            CheckFiles,
+            CheckStatementLanguages
             ]
 
 def is_interactive(path):
@@ -69,7 +71,7 @@ def directory_dfs(path):
         return
 
     children = get_subdirectiories(path)
-    for dir in children:
+    for dir in reversed(sorted(children)):
         directory_dfs(dir)
 
 
