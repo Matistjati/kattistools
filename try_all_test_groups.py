@@ -44,7 +44,7 @@ cpp_file = problem + "/input_validators/validator/validator.cpp"
 output_executable = '/tmp/validator.out'
 
 # Compile the C++ file
-compile_command = ['g++', cpp_file, '-o', output_executable]
+compile_command = ['g++', cpp_file, '-o', output_executable, '-std=c++20']
 compile_process = subprocess.run(compile_command, capture_output=True, text=True)
 
 # Check if compilation was successful
@@ -132,6 +132,13 @@ def print_table(data, headers):
     col_widths = [len(str(item)) for item in headers]
     for item in inputs:
       col_widths[0] = max(col_widths[0],len(item))
+    
+    for row in data:
+      for i, item in enumerate(row):
+        # Regex to match ANSI escape sequences
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+        
+        col_widths[i] = max(col_widths[i], len(ansi_escape.sub('', item)))
 
     # Create a format string for each row
     row_format = ' | '.join(f'{{:<{width}}}' for width in col_widths)
