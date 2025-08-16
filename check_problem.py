@@ -17,6 +17,7 @@ from checkers.check_shebang import CheckPythonShebang
 from checkers.check_statement import CheckStatement
 from checkers.check_files import CheckFiles
 from checkers.check_has_languages import CheckStatementLanguages
+from checkers.check_pragma import CheckPragma
 from kattistools.common import *
 
 checkers = [GeneratorChecker,
@@ -25,7 +26,8 @@ checkers = [GeneratorChecker,
             CheckPythonShebang,
             CheckStatement,
             CheckFiles,
-            CheckStatementLanguages
+            CheckStatementLanguages,
+            CheckPragma
             ]
 
 def is_interactive(path):
