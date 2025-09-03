@@ -90,7 +90,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Stylecheck PO problems')
     parser.add_argument('directory', help='Directory to recursively stylecheck')
     parser.add_argument("-s", "-i", "--skip", "--ignore", metavar='PROBLEM ID', nargs="*", help='Problem IDs to ignore')
-    parser.add_argument("-silent", action="store_true", help='Only print warnings and errors')
+    parser.add_argument("--silent", action="store_true", help='Only print warnings and errors')
 
     args = parser.parse_args()
 
