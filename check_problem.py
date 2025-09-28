@@ -6,9 +6,11 @@ import sys
 
 from rich.console import Console
 
-# Add the parent directory of 'kattistools' to the system path
+# Add parent directory to path so my LSP will be happy
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+EXCLUDED_DIRS = [".git", "testdata_tools"]
+BLUE="#52b2f7"
 
 from checkers.check_generator import GeneratorChecker
 from checkers.check_yaml import ProblemYamlChecker
@@ -30,38 +32,42 @@ checkers = [GeneratorChecker,
             CheckPragma
             ]
 
-def is_interactive(path):
-    with open(Path(path) / "problem.yaml", "r") as f:
+def is_interactive(path: Path):
+    with open(path / "problem.yaml", "r") as f:
         return "interactive" in f.read()
 
-excluded_dirs = [".git", "testdata_tools"]
 
 console = Console()
-def print_errors(path, errors):
+def print_errors(path: Path, errors):
     special = []
     if is_interactive(path):
         special.append("interactive")
-    if (Path(path) / "graders").exists():
+    if (path / "graders").exists():
         special.append("grader")
-    if (Path(path) / "include").exists():
+    if (path / "include").exists():
         special.append("include")
     interactive_msg = f" ({', '.join(special)})" if special else ""
-    console.print(f"> {Path(path).parent.name}/[#52b2f7]{get_node_name(path)}[/#52b2f7]{interactive_msg}:")
+    console.print(f"> {path.parent.name}/[{BLUE}]{path.name}[/{BLUE}]{interactive_msg}:")
     for error, error_list in reversed(sorted(errors.items())):
         console.print(error)
         console.print("\n".join(error_list))
     console.print("--------------\n\n")
 
+def is_problem(path: Path):
+    return (path / 'problem.yaml').exists()
+
 # Each checker is involved in the root of each problem exactly once
-def directory_dfs(path):
-    if any(path.endswith(exclude) for exclude in excluded_dirs):
+def directory_dfs(path: Path):
+    if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
+        return
+    
+    if path.is_file():
         return
 
-    is_problem = os.path.isfile(os.path.join(path, "problem.yaml"))
-    if is_problem:
+    if is_problem(path):
         errors = {}
         for check in checkers:
-            checker = check(path)
+            checker = check(str(path))
             for error_name, error_list in checker.errors.items():
                 error_list = [f"{i} ({checker.name})" for i in error_list]
                 if error_name not in errors:
@@ -72,7 +78,7 @@ def directory_dfs(path):
             print_errors(path, errors)
         return
 
-    children = get_subdirectiories(path)
+    children = path.iterdir()
     for dir in reversed(sorted(children)):
         directory_dfs(dir)
 
@@ -86,5 +92,5 @@ if __name__ == "__main__":
     if not Path(directory).exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(0)
-    directory_dfs(directory)
+    directory_dfs(Path(directory))
     
