@@ -6,20 +6,17 @@ import sys
 
 from rich.console import Console
 
-# Add parent directory to path so my LSP will be happy
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 EXCLUDED_DIRS = [".git", "testdata_tools"]
 BLUE="#52b2f7"
 
-from checkers.check_generator import GeneratorChecker
-from checkers.check_yaml import ProblemYamlChecker
-from checkers.check_subtask_score import CheckScoreMatchesStatement
-from checkers.check_shebang import CheckPythonShebang
-from checkers.check_statement import CheckStatement
-from checkers.check_files import CheckFiles
-from checkers.check_has_languages import CheckStatementLanguages
-from checkers.check_pragma import CheckPragma
+from kattistools.checkers.check_generator import GeneratorChecker
+from kattistools.checkers.check_yaml import ProblemYamlChecker
+from kattistools.checkers.check_subtask_score import CheckScoreMatchesStatement
+from kattistools.checkers.check_shebang import CheckPythonShebang
+from kattistools.checkers.check_statement import CheckStatement
+from kattistools.checkers.check_files import CheckFiles
+from kattistools.checkers.check_has_languages import CheckStatementLanguages
+from kattistools.checkers.check_pragma import CheckPragma
 from kattistools.common import *
 
 checkers = [GeneratorChecker,
@@ -57,7 +54,7 @@ def is_problem(path: Path):
     return (path / 'problem.yaml').exists()
 
 # Each checker is involved in the root of each problem exactly once
-def directory_dfs(path: Path):
+def directory_dfs(path: Path, checkers, error_callback):
     if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
         return
     
@@ -75,12 +72,12 @@ def directory_dfs(path: Path):
                 errors[error_name] += error_list
             
         if errors:
-            print_errors(path, errors)
+            error_callback(path, errors)
         return
 
     children = path.iterdir()
     for dir in reversed(sorted(children)):
-        directory_dfs(dir)
+        directory_dfs(dir, checkers, error_callback)
 
 
 if __name__ == "__main__":
@@ -92,5 +89,5 @@ if __name__ == "__main__":
     if not Path(directory).exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(0)
-    directory_dfs(Path(directory))
+    directory_dfs(Path(directory), checkers, print_errors)
     

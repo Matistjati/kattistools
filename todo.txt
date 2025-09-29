@@ -1,2 +1,2 @@
 check if swedish title has capitalized words that should not be
-
+check for 10^10 or 10^-9
