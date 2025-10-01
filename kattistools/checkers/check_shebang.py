@@ -1,5 +1,3 @@
-import os
-
 from kattistools.common import *
 from kattistools.checkers.checker import Checker
 
@@ -24,4 +22,3 @@ class CheckPythonShebang(Checker):
         
         for child in get_subdirectiories(path):
             self.handle_problem(child)
-        

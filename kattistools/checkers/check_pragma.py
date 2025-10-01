@@ -30,7 +30,8 @@ class CheckPragma(Checker):
             first_mitigation = 100000000
             for line in lines:
                 if line.startswith("#include <bits/allocator.h>") or \
-                   line.startswith("#include <bits/stdc++.h>"):
+                   line.startswith("#include <bits/stdc++.h>") or \
+                   line.startswith("#include <bitset>"):
                     first_mitigation = lines.index(line)
                     break
 
@@ -38,9 +39,10 @@ class CheckPragma(Checker):
             if first_pragma < first_mitigation:
                 self.print_error(f"File '{submission_name}' uses AVX2 without #include <bits/allocator.h>")
 
-    # Kill
-    #pragma GCC optimization... 
-    #pragma GCC target("avx2")
+    # Check that we don't have
+    #pragma GCC optimization...
+    # Or
+    #pragma GCC target("avx2, bmi") (bmi will not work)
     def check_malformed_pragma(self, file):
         submission_name = Path(*file.parts[-2:])
         with open(file, "r") as f:

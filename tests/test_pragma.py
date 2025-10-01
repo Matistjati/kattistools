@@ -3,14 +3,14 @@ from pathlib import Path
 from kattistools.check_problem import directory_dfs
 import kattistools.checkers.check_pragma as check_pragma
 
-def test_pdf_render_verifyproblem():
+def test_pragma_checker():
     errors = []
     def collect_error(path, e):
         nonlocal errors
         for _, value in e.items():
             errors += value
     problem_path = Path(__file__).parent / 'problems' / 'pragma'
-    directory_dfs(problem_path, [check_pragma.CheckPragma], collect_error)
+    directory_dfs(problem_path, [check_pragma.CheckPragma], [], collect_error)
     errors = ''.join(errors)
     BAD_FILES = ['unmitigated.cpp', 'optimization.cpp', 'multistring_target.cpp',
                  'splitpragma.cpp']

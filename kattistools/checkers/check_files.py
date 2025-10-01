@@ -14,7 +14,7 @@ class CheckFiles(Checker):
         if not (path / 'problem_statement').exists():
             self.print_error("no statement")
             return
-        
+
         statement_path = path / "problem_statement"
 
         for statement in list(statement_path.rglob("*.tex")) + list(statement_path.rglob("*.md")):

@@ -1,4 +1,5 @@
 from pathlib import Path
+import yaml
 
 from kattistools.checkers.checker import Checker
 
@@ -6,16 +7,9 @@ class ProblemYamlChecker(Checker):
     def __init__(self, path):
         super().__init__("problem.yaml", path)
         self.handle_problem(path)
-    
-    def any_begins(self, lines, needle):
-        return any(line.startswith(needle) for line in lines)
 
     def any_begins_case_insensitive(self, lines, needle):
         return any(line.lower().startswith(needle.lower()) for line in lines)
-
-    def notify_rights_owner(self, line):
-        if line.startswith("rights_owner") and line!="rights_owner: Programmeringsolympiaden":
-            self.print_maybe(f"rights owner {line}")
 
     def get_contest_source(self, path: Path):
         competitions = {}
@@ -33,21 +27,20 @@ class ProblemYamlChecker(Checker):
         competitions["langtavling"]="långtävling"
 
         for c, realc in competitions.items():
-            if c in path.parts:
-                print(c)
+            if c in path.resolve().parts:
                 return realc
-        self.print_error(f"can't find competition type for \"{path.parts[-2]}\"")
+        self.print_error(f"can't find competition type for \"{path.resolve().parts[-2]}\"")
         return None
 
     def get_contest_year(self, path: Path):
-        for part in path.parts:
+        for part in path.resolve().parts:
             if part.startswith("swedish-olympiad-"):
                 return part.split("swedish-olympiad-")[1]
-        self.print_error(f"Couldn't determine contest year for \"{path.parts[-2]}\"")
+        self.print_error(f"Couldn't determine contest year for \"{path.resolve().parts[-2]}\"")
         return None
 
-    def check_source_PO(self, lines, path):
-        is_po = any("swedish-olympiad" in part for part in path.parts)
+    def check_source_PO(self, lines, path: Path):
+        is_po = any("swedish-olympiad" in part for part in path.resolve().parts)
         # We only know the source "should be" for PO
         if not is_po:
             return
@@ -68,11 +61,11 @@ class ProblemYamlChecker(Checker):
                 self.print_error(f"source is '{yaml_source}', want '{desired_source}'")
 
 
-    def check_rights_owner(self, lines, path: Path):
+    def check_rights_owner(self, lines):
         # If there is no owner, we should change it to PO
         if any(line.startswith("rights_owner") for line in lines):
             return
-        self.print_warning("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\'")
+        self.print_warning("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\"")
 
     def handle_problem(self, path):
         # We can assume that problem.yaml exists, since that is precondition to be considred a problem
@@ -80,27 +73,50 @@ class ProblemYamlChecker(Checker):
         lines = []
         with open(path / "problem.yaml", "r") as f:
             lines = list(map(lambda line: line.strip(), f.readlines()))
+        with open(path / "problem.yaml", "r") as f:
+            problem_yaml = yaml.safe_load(f)
 
         self.check_source_PO(lines, path)
-        self.check_rights_owner(lines, path)
+        self.check_rights_owner(lines)
 
-        if not self.any_begins(lines, "show_test_data_groups: true") and \
-           not self.any_begins(lines, "show_test_data_groups: yes"):
-            self.print_error("problem.yaml must have 'show_test_data_groups: true'")
+        # This is removed in newer yaml versions
+        if self.any_begins_case_insensitive(lines, "show_test_data_groups: yes") or \
+           self.any_begins_case_insensitive(lines, "show_test_data_groups:yes"):
+            self.print_error("show_test_data_groups should be \"true\", not \"yes\"")
 
-        forbidden_keys = ["name:", "on_reject:", "range:", "objective:"]
+        has_test_data_groups = False
+        if 'grading' in problem_yaml:
+            if 'show_test_data_groups' in problem_yaml['grading']:
+                has_test_data_groups = True
+
+        if not has_test_data_groups:
+            self.print_error("Missing grading: show_test_data_groups: true in problem.yaml")
+
+
+        # Forbid name until the new problem format
+        forbidden_keys = ["name", "on_reject", "range", "objective"]
         for key in forbidden_keys:
-            if self.any_begins(lines, key):
-                self.print_error(f"problem.yaml should not have field {key[:-1]}")
+            if key in problem_yaml:
+                self.print_error(f"problem.yaml should not have field {key}")
 
-        if self.any_begins_case_insensitive(lines, "author: programmeringsolympiaden") or \
-           self.any_begins_case_insensitive(lines, "author:programmeringsolympiaden"):
-            self.print_error("problem.yaml, having programmeringsolympiaden as author is bas practice")
+        disallowed_author_special_chars = [
+            '/', '\\', '<', '>', '$', '"', "'",
+            '?', '*', '|', ':', ';', '@', '#', '!'
+        ]
+        if 'author' in problem_yaml:
+            author_name = problem_yaml['author']
+            if author_name.lower() == 'programmeringsolympiaden':
+                self.print_error("Having programmeringsolympiaden as author is bad practice (problem.yaml)")
+            for char in disallowed_author_special_chars:
+                if char in author_name:
+                    self.print_error(f"Problem author should not contain {char}")
+            if '&' in author_name:
+                self.print_error('Use comma to separate author names, not &')
 
+        is_scoring = False
+        if 'type' in problem_yaml:
+            if 'scoring' in problem_yaml['type']:
+                is_scoring=True
 
-        if not self.any_begins(lines, "type: scoring"):
+        if not is_scoring:
             self.print_error("problem.yaml must have 'type: scoring'")
-
-        for line in lines:
-            if line.startswith("author:") and "&" in line:
-                self.print_error("Use comma to separate author names, not &")

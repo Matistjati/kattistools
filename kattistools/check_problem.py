@@ -17,19 +17,27 @@ from kattistools.checkers.check_statement import CheckStatement
 from kattistools.checkers.check_files import CheckFiles
 from kattistools.checkers.check_has_languages import CheckStatementLanguages
 from kattistools.checkers.check_pragma import CheckPragma
+from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
 from kattistools.common import *
 
-checkers = [GeneratorChecker,
-            ProblemYamlChecker,
-            CheckScoreMatchesStatement,
-            CheckPythonShebang,
-            CheckStatement,
-            CheckFiles,
-            CheckStatementLanguages,
-            CheckPragma
-            ]
+checkers = [
+    GeneratorChecker,
+    ProblemYamlChecker,
+    CheckScoreMatchesStatement,
+    CheckPythonShebang,
+    CheckStatement,
+    CheckFiles,
+    CheckStatementLanguages,
+    CheckPragma
+]
+
+contest_checkers = [
+    ConsistentSourceChecker
+]
 
 def is_interactive(path: Path):
+    if not (path / 'problem.yaml').exists():
+        return False
     with open(path / "problem.yaml", "r") as f:
         return "interactive" in f.read()
 
@@ -50,18 +58,16 @@ def print_errors(path: Path, errors):
         console.print("\n".join(error_list))
     console.print("--------------\n\n")
 
-def is_problem(path: Path):
-    return (path / 'problem.yaml').exists()
 
 # Each checker is involved in the root of each problem exactly once
-def directory_dfs(path: Path, checkers, error_callback):
+def directory_dfs(path: Path, problem_checkers, contest_checkers, error_callback):
     if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
         return
     
     if path.is_file():
         return
-
-    if is_problem(path):
+    
+    def run_checkers(checkers):
         errors = {}
         for check in checkers:
             checker = check(str(path))
@@ -73,11 +79,16 @@ def directory_dfs(path: Path, checkers, error_callback):
             
         if errors:
             error_callback(path, errors)
+
+    if is_problem(path):
+        run_checkers(problem_checkers)
         return
+    else:
+        run_checkers(contest_checkers)
 
     children = path.iterdir()
     for dir in reversed(sorted(children)):
-        directory_dfs(dir, checkers, error_callback)
+        directory_dfs(dir, problem_checkers, contest_checkers, error_callback)
 
 
 if __name__ == "__main__":
@@ -89,5 +100,5 @@ if __name__ == "__main__":
     if not Path(directory).exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(0)
-    directory_dfs(Path(directory), checkers, print_errors)
+    directory_dfs(Path(directory), checkers, contest_checkers, print_errors)
     
