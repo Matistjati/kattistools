@@ -12,8 +12,12 @@ def test_pdf_render_verifyproblem():
     problem_path = Path(__file__).parent / 'problems' / 'pragma'
     directory_dfs(problem_path, [check_pragma.CheckPragma], collect_error)
     errors = ''.join(errors)
-    BAD_FILES = ['accepted/bad1.cpp', 'accepted/bad2.cpp', 'wrong_answer/bad.cpp']
-    GOOD_FILES = ['accepted/ok1.cpp', 'accepted/ok2.cpp', 'wrong_answer/ok.cpp']
+    BAD_FILES = ['unmitigated.cpp', 'optimization.cpp', 'multistring_target.cpp',
+                 'splitpragma.cpp']
+    BAD_FILES = [f'wrong_answer/{file}' for file in BAD_FILES]
+
+    GOOD_FILES = ['manypragma.cpp', 'mitigate_pragma_allocator.cpp', 'accepted/ok2.cpp', 'wrong_answer/ok.cpp']
+    GOOD_FILES = [f'accepted/{file}' for file in GOOD_FILES]
 
     for BAD_FILE in BAD_FILES:
         assert BAD_FILE in errors, f'Did not give error for file {BAD_FILE}'
