@@ -1,20 +1,6 @@
-import os
+from pathlib import Path
 
-from kattistools.common import *
 from kattistools.checkers.checker import Checker
-
-
-
-
-def get_prefix(type):
-    ret = "Programmeringsolympiadens "
-    return ret+type+" "
-
-def get_year(path):
-    return path.split("olympiad-")[1][0:4]
-
-
-
 
 class ProblemYamlChecker(Checker):
     def __init__(self, path):
@@ -27,62 +13,77 @@ class ProblemYamlChecker(Checker):
     def any_begins_case_insensitive(self, lines, needle):
         return any(line.lower().startswith(needle.lower()) for line in lines)
 
-    def print_maybe(self, message):
-        self.print_generic("maybe change", message)
-
     def notify_rights_owner(self, line):
         if line.startswith("rights_owner") and line!="rights_owner: Programmeringsolympiaden":
             self.print_maybe(f"rights owner {line}")
 
-    def categorize_path(self, path):
+    def get_contest_source(self, path: Path):
         competitions = {}
-        competitions["skolkval/"]="skolkval"
-        competitions["skol/"]="skolkval"
-        competitions["onlinekval/"]="onlinekval"
-        competitions["online/"]="onlinekval"
-        competitions["katt/"]="KATT"
-        competitions["katt1/"]="KATT"
-        competitions["katt2/"]="KATT"
-        competitions["katt3/"]="KATT"
+        competitions["skolkval"]="skolkval"
+        competitions["skol"]="skolkval"
+        competitions["onlinekval"]="onlinekval"
+        competitions["online"]="onlinekval"
+        competitions["katt"]="KATT"
+        competitions["katt1"]="KATT"
+        competitions["katt2"]="KATT"
+        competitions["katt3"]="KATT"
         competitions["district"] = "distriktsmästerskap"
-        competitions["lager/"]="lägertävling"
-        competitions["final/"]="final"
-        competitions["langtavling/"]="långtävling"
+        competitions["lager"]="lägertävling"
+        competitions["final"]="final"
+        competitions["langtavling"]="långtävling"
 
         for c, realc in competitions.items():
-            if c in path:
+            if c in path.parts:
+                print(c)
                 return realc
-        self.print_error(f"can't find competition type for \"{split_path(path)[-2]}\"")
-        return "ERROR"
+        self.print_error(f"can't find competition type for \"{path.parts[-2]}\"")
+        return None
 
+    def get_contest_year(self, path: Path):
+        for part in path.parts:
+            if part.startswith("swedish-olympiad-"):
+                return part.split("swedish-olympiad-")[1]
+        self.print_error(f"Couldn't determine contest year for \"{path.parts[-2]}\"")
+        return None
 
-    def notify_if_wrong_source(self, line, path):
-        if not "swedish-olympiad" in path:
+    def check_source_PO(self, lines, path):
+        is_po = any("swedish-olympiad" in part for part in path.parts)
+        # We only know the source "should be" for PO
+        if not is_po:
             return
-        if line.startswith("source:"):
-            comp = self.categorize_path(path)
-            year = get_year(path)
-            pref = get_prefix(comp)
-            source = line.split("source:")[1].lstrip()
-            if source[-1]=="\n":
-                source = source[0:-1]
-            if "#" in source:
-                source = source.split("#")[0].strip()
-            if source != pref+year:
-                self.print_error(f"source is '{line.split('source: ')[1]}', want '{pref+year}'")
+        for line in filter(lambda line: line.startswith("source:"), lines):
+            source = self.get_contest_source(path)
+            if not source:
+                return
+            year = self.get_contest_year(path)
+            if not year:
+                return
+            
+            desired_source = f"Programmeringsolympiadens {source} {year}"
+            yaml_source = line.split("source:")[1].strip()
+            # Sometimes, there's a comment of where it's really from
+            if "#" in yaml_source:
+                yaml_source = yaml_source.split("#")[0].strip()
+            if yaml_source != desired_source:
+                self.print_error(f"source is '{yaml_source}', want '{desired_source}'")
 
+
+    def check_rights_owner(self, lines, path: Path):
+        # If there is no owner, we should change it to PO
+        if any(line.startswith("rights_owner") for line in lines):
+            return
+        self.print_warning("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\'")
 
     def handle_problem(self, path):
         # We can assume that problem.yaml exists, since that is precondition to be considred a problem
+        path = Path(path)
         lines = []
-        with open(os.path.join(path, "problem.yaml"), "r") as f:
-            for line in f:
-                line = line.strip()
-                lines.append(line)
-                
-                if True:
-                    self.notify_if_wrong_source(line, path)
-        
+        with open(path / "problem.yaml", "r") as f:
+            lines = list(map(lambda line: line.strip(), f.readlines()))
+
+        self.check_source_PO(lines, path)
+        self.check_rights_owner(lines, path)
+
         if not self.any_begins(lines, "show_test_data_groups: true") and \
            not self.any_begins(lines, "show_test_data_groups: yes"):
             self.print_error("problem.yaml must have 'show_test_data_groups: true'")
