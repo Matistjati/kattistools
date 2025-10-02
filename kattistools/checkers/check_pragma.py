@@ -63,6 +63,6 @@ class CheckPragma(Checker):
 
 
     def handle_problem(self, path):
-        for file in Path(path).rglob("*.cpp"):
+        for file in path.rglob("*.cpp"):
             self.check_avx2(file)
             self.check_malformed_pragma(file)

@@ -1,17 +1,14 @@
-import os
+from pathlib import Path
 
-from kattistools.common import *
+from kattistools.common import is_interactive
 from kattistools.checkers.checker import Checker
-import re
-
-
 
 class CheckStatement(Checker):
     def __init__(self, path):
         super().__init__("statement", path)
-        self.is_interactive = False
+        self.is_interactive = is_interactive(path)
         self.handle_problem(path)
-    
+
     def any_begins(self, lines, needle):
         return any(line.startswith(needle) for line in lines)
 
@@ -39,7 +36,7 @@ class CheckStatement(Checker):
             self.print_warning("(sv) Missing poängsättning-section")
             
         if not self.any_has(lines, r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline"):
-            self.print_warning(f"(sv) missing modern subtask box {get_node_name(path)}")
+            self.print_warning(f"(sv) missing modern subtask box in {path.name}")
             return
         
         if not self.any_has(lines, "Inga ytterligare begränsningar."):
@@ -69,7 +66,7 @@ class CheckStatement(Checker):
             self.print_warning("(en) Missing scoring text")
         
         if True and not self.any_has(lines, r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"):
-            self.print_warning(f"(en) missing modern subtask box {get_node_name(path)}")
+            self.print_warning(f"(en) missing modern subtask box {path.name}")
         
         if not self.any_has(lines, "No additional constraints."):
             self.print_warning("(en) Did you forget \"No additional constraints.\" in subtask box?")
@@ -93,7 +90,7 @@ class CheckStatement(Checker):
 
         total_len = sum(len(line) for line in lines)
         if total_len<=100:
-            self.print_warning(f"({language} statement is unreasonably short ({total_len} chars)")
+            self.print_warning(f"({language}) statement is unreasonably short ({total_len} chars)")
 
         weird_quotes = ["’", "’"]
         for quote in weird_quotes:
@@ -141,26 +138,21 @@ class CheckStatement(Checker):
 
 
     def handle_problem(self, path):
-        if not folder_exists(path, "problem_statement"):
-            self.print_error("no statement")
+        statement_path = path / 'problem_statement'
+        if not statement_path.exists():
+            self.print_error("No statement")
             return
-        
-        with open(os.path.join(path,"problem.yaml"),"r") as f:
-            if "interactive" in f.read():
-                self.is_interactive = True
-        statement_path = os.path.join(path, "problem_statement")
 
-        statements = [file for file in get_files(statement_path) if file.endswith(".tex")]
+        statements = statement_path.glob('*.tex')
         for statement in statements:
-            name = os.path.basename(statement)
-            if name.count(".")==1:
+            if statement.name.count(".")==1:
                 self.print_error("Statement with only .tex")
             language = None
 
-            if ".sv" in statement:
+            if ".sv" in statement.name:
                 language = "sv"
                 self.handle_swedish(statement)
-            if ".en" in statement:
+            if ".en" in statement.name:
                 language = "en"
                 self.handle_english(statement)
             self.handle_all(statement, language)

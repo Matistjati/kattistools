@@ -1,7 +1,6 @@
-import os
 from pathlib import Path
 
-from kattistools.common import *
+from kattistools.common import edit_distance
 from kattistools.checkers.checker import Checker
 
 class CheckStatementLanguages(Checker):
@@ -11,7 +10,7 @@ class CheckStatementLanguages(Checker):
         self.handle_problem(path)
 
     def handle_problem(self, path):
-        if not folder_exists(path, "problem_statement"):
+        if not (path / 'problem_statement').exists():
             self.print_error("no statement")
             return
 
@@ -35,7 +34,5 @@ class CheckStatementLanguages(Checker):
         if not (statement_path / "problem.sv.tex").exists():
             self.print_warning("problem.sv.tex is missing")
 
-
         if not (statement_path / "problem.en.tex").exists():
             self.print_warning("problem.en.tex is missing")
-

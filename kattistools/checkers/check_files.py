@@ -1,7 +1,5 @@
-import os
 from pathlib import Path
 
-from kattistools.common import *
 from kattistools.checkers.checker import Checker
 import re
 
@@ -37,7 +35,6 @@ class CheckFiles(Checker):
             self.print_error("testdata.yaml in root")
 
     def handle_problem(self, path):
-        path=Path(path)
         self.check_statement_files(path)
         self.check_input_validator(path)
         self.check_testdata_root(path)

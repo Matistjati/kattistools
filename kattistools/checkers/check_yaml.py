@@ -2,6 +2,7 @@ from pathlib import Path
 import yaml
 
 from kattistools.checkers.checker import Checker
+from kattistools.common import edit_distance
 
 class ProblemYamlChecker(Checker):
     def __init__(self, path):
@@ -61,15 +62,18 @@ class ProblemYamlChecker(Checker):
                 self.print_error(f"source is '{yaml_source}', want '{desired_source}'")
 
 
-    def check_rights_owner(self, lines):
+    def check_rights_owner(self, yaml):
         # If there is no owner, we should change it to PO
-        if any(line.startswith("rights_owner") for line in lines):
-            return
-        self.print_warning("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\"")
+        if 'rights_owner' in yaml:
+            desired_rights_owner = 'Programmeringsolympiaden'
+            yaml_rights_owner = yaml['rights_owner']
+            if desired_rights_owner != yaml_rights_owner and edit_distance(desired_rights_owner, yaml_rights_owner) <= 3:
+                self.errors(f"Likely typo: rights_owner is {yaml_rights_owner}, not {desired_rights_owner}")
+        else:
+            self.print_warning("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\"")
 
     def handle_problem(self, path):
         # We can assume that problem.yaml exists, since that is precondition to be considred a problem
-        path = Path(path)
         lines = []
         with open(path / "problem.yaml", "r") as f:
             lines = list(map(lambda line: line.strip(), f.readlines()))
@@ -77,9 +81,9 @@ class ProblemYamlChecker(Checker):
             problem_yaml = yaml.safe_load(f)
 
         self.check_source_PO(lines, path)
-        self.check_rights_owner(lines)
+        self.check_rights_owner(problem_yaml)
 
-        # This is removed in newer yaml versions
+        # "yes" meaning true is removed in newer yaml versions
         if self.any_begins_case_insensitive(lines, "show_test_data_groups: yes") or \
            self.any_begins_case_insensitive(lines, "show_test_data_groups:yes"):
             self.print_error("show_test_data_groups should be \"true\", not \"yes\"")
@@ -87,7 +91,8 @@ class ProblemYamlChecker(Checker):
         has_test_data_groups = False
         if 'grading' in problem_yaml:
             if 'show_test_data_groups' in problem_yaml['grading']:
-                has_test_data_groups = True
+                if problem_yaml['grading']['show_test_data_groups'] == True:
+                    has_test_data_groups = True
 
         if not has_test_data_groups:
             self.print_error("Missing grading: show_test_data_groups: true in problem.yaml")

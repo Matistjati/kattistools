@@ -70,7 +70,7 @@ def directory_dfs(path: Path, problem_checkers, contest_checkers, error_callback
     def run_checkers(checkers):
         errors = {}
         for check in checkers:
-            checker = check(str(path))
+            checker = check(path)
             for error_name, error_list in checker.errors.items():
                 error_list = [f"{i} ({checker.name})" for i in error_list]
                 if error_name not in errors:

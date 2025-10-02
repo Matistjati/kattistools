@@ -26,7 +26,6 @@ class ConsistentSourceChecker(Checker):
         return problems
 
     def handle_contest(self, path):
-        path=Path(path)
         problems = self.gather_problems(path)
         sources = []
         for problem in problems:
