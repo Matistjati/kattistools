@@ -44,12 +44,10 @@ class CheckStatement(Checker):
 
     def handle_swedish(self, path):
         lines = self.get_lines(path)
-        if not self.is_interactive and not self.any_begins(lines, "\section*{Indata}"):
-            self.print_error("(sv) missing \section*{Indata}")
-        if not self.is_interactive and not self.any_begins(lines, "\section*{Utdata}"):
-            self.print_error("(sv) missing \section*{Utdata}")
-        
-        
+        if not self.is_interactive and not self.any_begins(lines, r"\section*{Indata}"):
+            self.print_error(r"(sv) missing \section*{Indata}")
+        if not self.is_interactive and not self.any_begins(lines, r"\section*{Utdata}"):
+            self.print_error(r"(sv) missing \section*{Utdata}")
 
         no_subtasks = self.any_begins(lines, "Din lösning kommer att testas på flera testfall.")
         # If that line is present, do not look for subtask box
@@ -73,10 +71,10 @@ class CheckStatement(Checker):
 
     def handle_english(self, path):
         lines = self.get_lines(path)
-        if not self.is_interactive and not self.any_begins(lines, "\section*{Input}"):
-            self.print_error("(en) missing \section*{Input}")
-        if not self.is_interactive and not self.any_begins(lines, "\section*{Output}"):
-            self.print_error("(en) missing \section*{Output}")
+        if not self.is_interactive and not self.any_begins(lines, r"\section*{Input}"):
+            self.print_error(r"(en) missing \section*{Input}")
+        if not self.is_interactive and not self.any_begins(lines, r"\section*{Output}"):
+            self.print_error(r"(en) missing \section*{Output}")
         
 
         no_subtasks = self.any_begins(lines, "Your solution will be tested on multiple testcases.")
