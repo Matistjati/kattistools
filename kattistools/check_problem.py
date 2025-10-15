@@ -1,6 +1,7 @@
 from pathlib import Path
 import argparse
 import sys
+import re
 
 from rich.console import Console
 
@@ -47,9 +48,19 @@ def is_interactive(path: Path):
         return "interactive" in f.read()
 
 
+def find_rightmost_year(path: Path) -> int | None:
+    year_pattern = re.compile(r'\b(19[7-9]\d|20\d\d|2100)\b')
+    
+    for part in reversed(path.parts):
+        match = year_pattern.search(part)
+        if match:
+            return int(match.group(0))
+    return None
+
 console = Console()
 def print_errors(path: Path, errors):
     special = []
+    year = find_rightmost_year(path)
     if is_interactive(path):
         special.append("interactive")
     if (path / "graders").exists():
@@ -57,7 +68,8 @@ def print_errors(path: Path, errors):
     if (path / "include").exists():
         special.append("include")
     interactive_msg = f" ({', '.join(special)})" if special else ""
-    console.print(f"> {path.parent.name}/[{BLUE}]{path.name}[/{BLUE}]{interactive_msg}:")
+    year_msg = f"({year})" if year else ''
+    console.print(f"> {path.parent.name}/[{BLUE}]{path.name}[/{BLUE}] {year_msg}{interactive_msg}:")
     for error, error_list in reversed(sorted(errors.items())):
         console.print(error)
         console.print("\n".join(error_list))
