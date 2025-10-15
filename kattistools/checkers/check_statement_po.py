@@ -46,10 +46,7 @@ class CheckStatementPO(Checker):
         if not self.is_interactive and not self.any_begins(lines, r"\section*{Utdata}"):
             self.print_error(r"(sv) missing \section*{Utdata}")
 
-        no_subtasks = self.any_begins(lines, "Din lösning kommer att testas på flera testfall.")
-        # If that line is present, do not look for subtask box
-        if not no_subtasks:
-            self.parse_swedish_subtask_box(path)
+        self.parse_swedish_subtask_box(path)
  
     def parse_english_subtask_box(self, path):
         lines = self.read_file(path)
@@ -73,10 +70,7 @@ class CheckStatementPO(Checker):
         if not self.is_interactive and not self.any_begins(lines, r"\section*{Output}"):
             self.print_error(r"(en) missing \section*{Output}")
 
-        no_subtasks = self.any_begins(lines, "Your solution will be tested on multiple testcases.")
-        # If that line is present, do not look for subtask box
-        if not no_subtasks:
-            self.parse_english_subtask_box(path)
+        self.parse_english_subtask_box(path)
 
 
     def handle_problem(self, path):

@@ -131,6 +131,28 @@ class CheckStatement(Checker):
         self.check_quotes(path, language)
         self.check_exponents(path, language)
 
+
+    def get_problem_name(self, statement_path):
+        with open(statement_path, 'r') as f:
+            first_line = f.readlines()[0]
+        try:
+            problem_name = first_line.split('{')[1].split('}')[0]
+        except:
+            return ''
+        return problem_name
+
+    def handle_swedish(self, statement_path):
+        problem_name = self.get_problem_name(statement_path)
+        if not problem_name:
+            self.print_warning(f'(sv) statement: missing \\problemname')
+            return
+
+    def handle_english(self, statement_path):
+        problem_name = self.get_problem_name(statement_path)
+        if not problem_name:
+            self.print_warning(f'(en) statement: missing \\problemname')
+            return
+
     def handle_problem(self, path: Path):
         statement_path = path / 'problem_statement'
         if not statement_path.exists():
@@ -142,4 +164,10 @@ class CheckStatement(Checker):
             if statement.name.count(".")==1:
                 self.print_error("Statement with only .tex")
             language = statement.name.split('.')[1]
-            self.handle_all(statement, language)#
+            
+            if language == 'sv':
+                self.handle_swedish(statement)
+            if language == 'en':
+                self.handle_english(statement)
+
+            self.handle_all(statement, language)
