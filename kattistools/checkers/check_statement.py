@@ -25,12 +25,12 @@ class CheckStatement(Checker):
             total_len = sum(len(line) for line in lines)
 
             def ignore_line(line):
-                if line.startswith('\illustration'):
+                if line.startswith(r'\illustration'):
                     return True
 
-                if line.strip().startswith('\item') and len(line) < 170:
+                if line.strip().startswith(r'\item') and len(line) < 170:
                     return True
-                if line.strip().startswith('\caption') and len(line) < 150:
+                if line.strip().startswith(r'\caption') and len(line) < 150:
                     return True
                 line = line.strip()
                 if len(line) < 3:

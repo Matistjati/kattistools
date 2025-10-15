@@ -11,6 +11,7 @@ from kattistools.checkers.check_generator import GeneratorChecker
 from kattistools.checkers.check_yaml import ProblemYamlChecker
 from kattistools.checkers.check_subtask_score import CheckScoreMatchesStatement
 from kattistools.checkers.check_shebang import CheckPythonShebang
+from kattistools.checkers.check_template import CheckCPPTemplate
 from kattistools.checkers.check_statement import CheckStatement
 from kattistools.checkers.check_statement_po import CheckStatementPO
 from kattistools.checkers.check_files import CheckFiles
@@ -19,7 +20,7 @@ from kattistools.checkers.check_pragma import CheckPragma
 from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
 from kattistools.common import *
 
-checkers = [
+default_checkers = [
     GeneratorChecker,
     ProblemYamlChecker,
     CheckScoreMatchesStatement,
@@ -29,6 +30,10 @@ checkers = [
     CheckFiles,
     CheckStatementLanguages,
     CheckPragma
+]
+
+strict_checkers = [
+    CheckCPPTemplate,
 ]
 
 contest_checkers = [
@@ -94,11 +99,17 @@ def directory_dfs(path: Path, problem_checkers, contest_checkers, error_callback
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Stylecheck PO problems')
     parser.add_argument('directory', help='Directory to recursively stylecheck')
+    parser.add_argument('-s', '--strict', help='Apply strict checks', action='store_true')
     args = parser.parse_args()
     
     directory = args.directory
     if not Path(directory).exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(0)
+
+    checkers = default_checkers
+    if args.strict:
+        checkers += strict_checkers
+
     directory_dfs(Path(directory), checkers, contest_checkers, print_errors)
     
