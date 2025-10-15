@@ -12,6 +12,7 @@ from kattistools.checkers.check_yaml import ProblemYamlChecker
 from kattistools.checkers.check_subtask_score import CheckScoreMatchesStatement
 from kattistools.checkers.check_shebang import CheckPythonShebang
 from kattistools.checkers.check_statement import CheckStatement
+from kattistools.checkers.check_statement_po import CheckStatementPO
 from kattistools.checkers.check_files import CheckFiles
 from kattistools.checkers.check_has_languages import CheckStatementLanguages
 from kattistools.checkers.check_pragma import CheckPragma
@@ -24,6 +25,7 @@ checkers = [
     CheckScoreMatchesStatement,
     CheckPythonShebang,
     CheckStatement,
+    CheckStatementPO,
     CheckFiles,
     CheckStatementLanguages,
     CheckPragma

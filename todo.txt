@@ -1,6 +1,7 @@
 check if swedish title has capitalized words that should not be
-check for 10^10 or 10^-9
 consistent source per contest
 are there undefined variables? basically, some variable got renamed but we forgot to change all occurences.
 a finite score range is set for all levels
 warn if edit date of the generator is older than the files in secret
+correct problemname capitalization
+input should be split across lines

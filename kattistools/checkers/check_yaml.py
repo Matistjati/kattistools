@@ -79,6 +79,8 @@ class ProblemYamlChecker(Checker):
             lines = list(map(lambda line: line.strip(), f.readlines()))
         with open(path / "problem.yaml", "r") as f:
             problem_yaml = yaml.safe_load(f)
+            if not problem_yaml:
+                problem_yaml = {}
 
         self.check_source_PO(lines, path)
         self.check_rights_owner(problem_yaml)

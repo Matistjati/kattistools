@@ -9,86 +9,46 @@ class CheckStatement(Checker):
         self.is_interactive = is_interactive(path)
         self.handle_problem(path)
 
-    def any_begins(self, lines, needle):
-        return any(line.startswith(needle) for line in lines)
-
     def any_has(self, lines, needle):
         return any(needle in line for line in lines)
 
-    def get_lines(self, path):
-        seen = set()
-        
+    def get_unique_lines(self, path):
         with open(path, "r") as f:
-            for line in f:
-                seen.add(line)
-        return seen
-    
-    def read_file(self, path):
-        ret = []
-        with open(path, "r") as f:
-            for line in f:
-                ret.append(line)
-        return ret
+            return set(f.readlines())
 
-    def parse_swedish_subtask_box(self, path):
-        lines = self.read_file(path)
-        if not self.any_begins(lines, "Din lösning kommer att testas på en mängd testfallsgrupper."):
-            self.print_warning("(sv) Missing poängsättning-section")
-            
-        if not self.any_has(lines, r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline"):
-            self.print_warning(f"(sv) missing modern subtask box in {path.name}")
-            return
-        
-        if not self.any_has(lines, "Inga ytterligare begränsningar."):
-            self.print_warning("(sv) Did you forget \"Inga ytterligare begränsningar.\" in subtask box?")
+    # Checks that the statement is not almost empty
+    # and that no line is too long
+    # Allow long lines in subtask box
+    def check_statement_length(self, statement_path, language):
+        with open(statement_path, 'r') as f:
+            lines = f.readlines()
+            total_len = sum(len(line) for line in lines)
 
-    def handle_swedish(self, path):
-        lines = self.get_lines(path)
-        if not self.is_interactive and not self.any_begins(lines, r"\section*{Indata}"):
-            self.print_error(r"(sv) missing \section*{Indata}")
-        if not self.is_interactive and not self.any_begins(lines, r"\section*{Utdata}"):
-            self.print_error(r"(sv) missing \section*{Utdata}")
+            def ignore_line(line):
+                if line.startswith('\illustration'):
+                    return True
 
-        no_subtasks = self.any_begins(lines, "Din lösning kommer att testas på flera testfall.")
-        # If that line is present, do not look for subtask box
-        if not no_subtasks:
-            self.parse_swedish_subtask_box(path)
- 
-    def parse_english_subtask_box(self, path):
-        lines = self.read_file(path)
+                if line.strip().startswith('\item') and len(line) < 170:
+                    return True
+                if line.strip().startswith('\caption') and len(line) < 150:
+                    return True
+                line = line.strip()
+                if len(line) < 3:
+                    return False
+                if line[0] == '$' and line[2] == '$' and line[1].isnumeric():
+                    return True
+                return False
 
-        if not self.any_begins(lines, r"\section*{Scoring}"):
-            self.print_warning(r"(en) Missing \section*{Scoring}")
+            filtered_lines = filter(lambda line: not ignore_line(line), lines)
+            longest_line = max(len(line) for line in filtered_lines)
 
-        if not self.any_begins(lines, "Your solution will be tested on a set of test groups, each worth a number of points. Each test group contains"):
-            self.print_warning("(en) Missing scoring text")
-        
-        if True and not self.any_has(lines, r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"):
-            self.print_warning(f"(en) missing modern subtask box {path.name}")
-        
-        if not self.any_has(lines, "No additional constraints."):
-            self.print_warning("(en) Did you forget \"No additional constraints.\" in subtask box?")
-
-    def handle_english(self, path):
-        lines = self.get_lines(path)
-        if not self.is_interactive and not self.any_begins(lines, r"\section*{Input}"):
-            self.print_error(r"(en) missing \section*{Input}")
-        if not self.is_interactive and not self.any_begins(lines, r"\section*{Output}"):
-            self.print_error(r"(en) missing \section*{Output}")
-        
-
-        no_subtasks = self.any_begins(lines, "Your solution will be tested on multiple testcases.")
-        # If that line is present, do not look for subtask box
-        if not no_subtasks:
-            self.parse_english_subtask_box(path)
-
- 
-    def handle_all(self, path, language):
-        lines = self.get_lines(path)
-
-        total_len = sum(len(line) for line in lines)
-        if total_len<=100:
+        if total_len <= 100:
             self.print_warning(f"({language}) statement is unreasonably short ({total_len} chars)")
+        if longest_line > 130:
+            self.print_warning(f"({language}) statement has a line of length {longest_line}, which is longer than recommended max of 130")
+
+    def check_quotes(self, statement_path, language):
+        lines = self.get_unique_lines(statement_path)
 
         weird_quotes = ["’", "’"]
         for quote in weird_quotes:
@@ -134,24 +94,52 @@ class CheckStatement(Checker):
                 for w in unique_w:
                     self.print_error(f"({language}) Don't use {quote[0]}{w}{quote[1]}, use {correct_quote[0]}{w}{correct_quote[1]} instead")
 
+    # Check for 10^18 and similar
+    def check_exponents(self, statement_path, language):
+        lines = self.get_unique_lines(statement_path)
+        import string
+        disallowed_ends = [*string.digits]
 
-    def handle_problem(self, path):
+        def check_line(line):
+            while '$' in line:
+                first_occ = line.find('$')
+                second_occ = line.find('$', first_occ+1)
+                math_content = line[first_occ+1:second_occ]
+                if second_occ==-1:
+                    line=''
+                else:
+                    line = line[second_occ+1:]
+                original_math = math_content
+
+                while '^' in math_content:
+                    pow_occ = math_content.find('^')
+                    math_content = math_content[pow_occ+1:]
+                    # Assume proper placement if they thought of {
+                    if len(math_content) == 0 or math_content[0] == '{':
+                        continue
+
+                    if len(math_content)>1:
+                        if math_content[1] in disallowed_ends:
+                            self.print_warning(f'({language}) statement: you probably forgot to add brackets around ^ content in math block ${original_math}$')
+                            return
+
+        for line in lines:
+            check_line(line)
+
+    def handle_all(self, path, language):
+        self.check_statement_length(path,language)
+        self.check_quotes(path, language)
+        self.check_exponents(path, language)
+
+    def handle_problem(self, path: Path):
         statement_path = path / 'problem_statement'
         if not statement_path.exists():
-            self.print_error("No statement")
+            self.print_error("Problem has no statement")
             return
 
         statements = statement_path.glob('*.tex')
         for statement in statements:
             if statement.name.count(".")==1:
                 self.print_error("Statement with only .tex")
-            language = None
-
-            if ".sv" in statement.name:
-                language = "sv"
-                self.handle_swedish(statement)
-            if ".en" in statement.name:
-                language = "en"
-                self.handle_english(statement)
-            self.handle_all(statement, language)
-
+            language = statement.name.split('.')[1]
+            self.handle_all(statement, language)#
