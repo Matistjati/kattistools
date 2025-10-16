@@ -68,8 +68,8 @@ def print_errors(path: Path, errors):
     if (path / "include").exists():
         special.append("include")
     interactive_msg = f" ({', '.join(special)})" if special else ""
-    year_msg = f"({year})" if year else ''
-    console.print(f"> {path.parent.name}/[{BLUE}]{path.name}[/{BLUE}] {year_msg}{interactive_msg}:")
+    year_msg = f" ({year})" if year else ''
+    console.print(f"> {path.parent.name}/[{BLUE}]{path.name}[/{BLUE}]{year_msg}{interactive_msg}:")
     for error, error_list in reversed(sorted(errors.items())):
         console.print(error)
         console.print("\n".join(error_list))

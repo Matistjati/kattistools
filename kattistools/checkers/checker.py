@@ -18,3 +18,6 @@ class Checker:
     def print_warning(self, message):
         self.print_generic("[#FFFF00]Warnings:[/#FFFF00]", message)
 
+    def print_info(self, message):
+        self.print_generic("[#75ddff]Info:[/#75ddff]", message)
+

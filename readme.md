@@ -7,6 +7,13 @@ After this, you can run the program by using bin/check_problem.sh. I would recom
 to your `.bashrc`: `alias check="clear && ~/software/kattistools/bin/check_problem.sh"` (where you replace
 software with the folder you're using).
 
+## Philosophy
+What this tool tries to do is in some sense impossible in the general. Therefore, there is some amount of
+trade-off between false positives and false negatives. We have chosen to prioritze:
+- Minimizing false negatives. Therefore, false positives become more common.
+- Not adding any metadata to problem packages. The only way that problem packages should change from
+using this tool is that they are of higher quality. No #exclude
+
 ## Example usage
 
 `./bin/check_problem.sh ../swedish_olympiad_2016/katt1/cities`

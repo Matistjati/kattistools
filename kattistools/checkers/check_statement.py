@@ -1,4 +1,5 @@
 from pathlib import Path
+import string
 
 from kattistools.common import is_interactive
 from kattistools.checkers.checker import Checker
@@ -6,6 +7,10 @@ from kattistools.checkers.checker import Checker
 class CheckStatement(Checker):
     def __init__(self, path):
         super().__init__("statement", path)
+        NAMES_PATH = Path(__file__).parent.parent.parent / "data" / "names.txt"
+        with open(NAMES_PATH, 'r') as f:
+            self.names = [name.strip() for name in f.readlines()]
+
         self.is_interactive = is_interactive(path)
         self.handle_problem(path)
 
@@ -141,17 +146,35 @@ class CheckStatement(Checker):
             return ''
         return problem_name
 
+    def is_capitalized(self, letter, prefer_true):
+        uppercase = string.ascii_uppercase + "ÅÄÖ"
+        if letter in uppercase:
+            return True
+        return True if prefer_true else False
+
     def handle_swedish(self, statement_path):
         problem_name = self.get_problem_name(statement_path)
         if not problem_name:
             self.print_warning(f'(sv) statement: missing \\problemname')
             return
+        first_word = problem_name.split()[0]
+        if not self.is_capitalized(first_word[0], prefer_true=True):
+            self.print_error(f'(sv) First letter in problem name "{first_word}" is not capitalized')
+            return
+        for word in problem_name.split()[1:]:
+            if self.is_capitalized(word[0], prefer_true=False) and word not in self.names:
+                self.print_info(f'(sv) First letter in word "{word}" in title is capitalized. Double-check that this is a name')
 
     def handle_english(self, statement_path):
         problem_name = self.get_problem_name(statement_path)
         if not problem_name:
             self.print_warning(f'(en) statement: missing \\problemname')
             return
+
+        lowercase_words_in_title = ['a', 'an', 'the', 'and', 'but', 'for', 'or', 'so', 'yet', 'at', 'by', 'for', 'in', 'of']
+        for word in problem_name.split()[1:]:
+            if not self.is_capitalized(word[0], prefer_true=True) and word not in lowercase_words_in_title:
+                self.print_warning(f'(en) first letter in word "{word}" is not capitalized')
 
     def handle_problem(self, path: Path):
         statement_path = path / 'problem_statement'

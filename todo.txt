@@ -1,8 +1,7 @@
-check if swedish title has capitalized words that should not be
 are there undefined variables? basically, some variable got renamed but we forgot to change all occurences.
 a finite score range is set for all levels
 warn if edit date of the generator is older than the files in secret
-correct problemname capitalization
 input should be split across lines
 check that no input validator uses bits/stdc++.h
 only check subtask box if the problem has more than one subtask
+exclude dir cmd line option
