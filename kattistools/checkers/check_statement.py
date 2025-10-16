@@ -10,6 +10,7 @@ class CheckStatement(Checker):
         NAMES_PATH = Path(__file__).parent.parent.parent / "data" / "names.txt"
         with open(NAMES_PATH, 'r') as f:
             self.names = [name.strip() for name in f.readlines()]
+        self.names += [f"{name}s" for name in self.names]
 
         self.is_interactive = is_interactive(path)
         self.handle_problem(path)
