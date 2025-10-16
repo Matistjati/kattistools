@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from kattistools.checkers.checker import Checker
+from kattistools.common import count_subtasks
 
 class CheckScoreMatchesStatement(Checker):
     def __init__(self, path):
@@ -11,15 +12,16 @@ class CheckScoreMatchesStatement(Checker):
         scores = []
         for f in sorted(path.glob("*/testdata.yaml")):
             with open(f, "r") as file:
-                score_line = list(filter(lambda line: line.startswith("accept_score: "), file.readlines()))
+                score_line = list(filter(lambda line: line.startswith("range: "), file.readlines()))
                 if len(score_line)==0:
-                    self.print_error(f"Accept_score not given in {f}")
+                    self.print_error(f"range not given in {f}")
                     return
-                scores.append(int(score_line[0].split("accept_score: ")[1]))
+                score_range = score_line[0].split("range: ")[1]
+                scores.append(int(score_range.split()[1]))
         return scores
 
     def get_statement_scores(self, statement_path: Path):
-        statement_scores = []
+        statement_scores: list[list[int]] = []
 
         for stpath in statement_path.glob('*.tex'):
             scores = []
@@ -27,12 +29,7 @@ class CheckScoreMatchesStatement(Checker):
                 inside_box = False
                 counter = 1
                 for line in f:
-                    if line.startswith("Din lösning kommer att testas på flera testfall. För att få 100 poäng så måste du klara alla testfall."):
-                        scores.append(100)
-
-                    if line.startswith("\\begin{tabular}"):
-                        inside_box = 1
-                    if inside_box == 1 and line.strip().startswith("\\hline"):
+                    if line.startswith(r"  \textbf{Gr"):
                         inside_box = 2
                     if inside_box < 2:
                         continue
@@ -54,10 +51,8 @@ class CheckScoreMatchesStatement(Checker):
         if len(statement_scores)==0:
             self.print_error(f"Did not manage to find subtask scores in {statement_path}")
             return None
-        good = True
-        for i in statement_scores:
-            good &= i==statement_scores[0]
-        if not good:
+
+        if not all(statement_scores[0]==score for score in statement_scores):
             self.print_error(f"different statements disagree on scores for {statement_path}")
             self.print_error(statement_scores)
         
@@ -83,9 +78,11 @@ class CheckScoreMatchesStatement(Checker):
         if sum(secret_scores) != 100:
             self.print_warning(f"secret: total score is not 100, is {sum(secret_scores)}")
 
-        statement_path = path / "problem_statement"
-        statement_scores = self.get_statement_scores(statement_path)
+        # We only have scoring text if we have subtasks
+        if count_subtasks(path) > 1:
+            statement_path = path / "problem_statement"
+            statement_scores = self.get_statement_scores(statement_path)
 
-        if statement_scores!=secret_scores:
-            self.print_error("Score mismatch statement/secret")
-            self.print_error(f"Secret: {secret_scores}, statement: {statement_scores}")
+            if statement_scores!=secret_scores:
+                self.print_error("Score mismatch statement/secret")
+                self.print_error(f"Secret: {secret_scores}, statement: {statement_scores}")

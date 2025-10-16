@@ -10,6 +10,11 @@ def is_interactive(problem: Path) -> bool:
     with open(problem / 'problem.yaml', 'r') as f:
         return 'interactive' in f.read()
 
+# Number of subtasks according to secret
+def count_subtasks(problem_path: Path):
+    secret_path = problem_path / 'data' / 'secret'
+    return len([path for path in secret_path.glob('*') if path.is_dir()])
+
 # Allows insert, delete, substitution and swapping two adjacent
 def edit_distance(s1, s2):
     m, n = len(s1), len(s2)
