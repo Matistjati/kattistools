@@ -6,3 +6,5 @@ check that no input validator uses bits/stdc++.h
 only check subtask box if the problem has more than one subtask
 exclude dir cmd line option
 anti chatgpt sample case
+no EOF in input validators
+add warning if IOI scoring will not apply
