@@ -50,8 +50,8 @@ class CheckStatement(Checker):
 
         if total_len <= 100:
             self.print_warning(f"({language}) statement is unreasonably short ({total_len} chars)")
-        if longest_line > 130:
-            self.print_warning(f"({language}) statement has a line of length {longest_line}, which is longer than recommended max of 130")
+        #if longest_line > 130:
+        #    self.print_warning(f"({language}) statement has a line of length {longest_line}, which is longer than recommended max of 130")
 
     def check_quotes(self, statement_path, language):
         lines = self.get_unique_lines(statement_path)

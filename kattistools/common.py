@@ -4,7 +4,20 @@ def is_problem(path: Path):
     return (path / 'problem.yaml').exists()
 
 def is_generator(file: Path) -> bool:
-    return file.is_file() and file.suffix in {".dsl", ".bash", ".sh"}
+    if not file.is_file():
+        return False
+    if file.suffix not in {".dsl", ".bash", ".sh"}:
+        return False
+    # Skolkval generators are only temporary
+    if "skolkval" in file.name:
+        return False
+    # Sometimes, people add a modified testdata_tools generator
+    # in the data directory. This is not a generator
+    with open(file, "r") as f:
+        is_testdata_tools = any(line.startswith('# This file') for line in f.readlines())
+        if is_testdata_tools:
+            return False
+    return True
 
 def is_interactive(problem: Path) -> bool:
     with open(problem / 'problem.yaml', 'r') as f:

@@ -12,11 +12,6 @@ class GeneratorChecker(Checker):
     def get_generator(self, data_path: Path):
         for item in data_path.glob('*'):
             if is_generator(item):
-                # Sometimes, people add a modified testdata_tools generator
-                with open(item, "r") as f:
-                    is_testdata_tools = any(line.startswith('# This file') for line in f.readlines())
-                    if is_testdata_tools:
-                        continue
                 return item
         return None
 
@@ -32,7 +27,7 @@ class GeneratorChecker(Checker):
             self.print_warning("Couldn't find generator for problem")
             return
 
-        # Check that there is no REQUIRE_SAMPLE_REUSE
+        # Check: there should be no REQUIRE_SAMPLE_REUSE
         with open(gen, "r") as f:
             for line in f:
                 if line.startswith("REQUIRE_SAMPLE_REUSE=0"):
@@ -48,6 +43,13 @@ class GeneratorChecker(Checker):
         if not secret_path.exists():
             self.print_warning("No secret data for problem")
             return
+        
+        # Check: did not forget to run generator after changes
+        # This is kind of fuzzy, since git does not store timestamps
+        generator_change_date = gen.stat().st_mtime
+        secret_change_date = secret_path.stat().st_mtime
+        if generator_change_date > secret_change_date:
+            self.print_error("Generator is newer than secret data. You should re-run the generator.")
 
         secret_groups = sorted(p.stem for p in secret_path.glob('*/') if p.is_dir())
 
