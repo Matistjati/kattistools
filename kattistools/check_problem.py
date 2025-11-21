@@ -14,6 +14,7 @@ from kattistools.checkers.check_subtask_score import CheckScoreMatchesStatement
 from kattistools.checkers.check_shebang import CheckPythonShebang
 from kattistools.checkers.check_template import CheckCPPTemplate
 from kattistools.checkers.check_statement import CheckStatement
+from kattistools.checkers.check_statement_files import CheckStatementFiles
 from kattistools.checkers.check_statement_po import CheckStatementPO
 from kattistools.checkers.check_files import CheckFiles
 from kattistools.checkers.check_has_languages import CheckStatementLanguages
@@ -30,7 +31,8 @@ default_checkers = [
     CheckStatementPO,
     CheckFiles,
     CheckStatementLanguages,
-    CheckPragma
+    CheckPragma,
+    CheckStatementFiles
 ]
 
 strict_checkers = [

@@ -13,11 +13,12 @@ def test_yaml_checker():
     problem_path = Path(__file__).parent / 'problems' / 'tikz'
     directory_dfs(problem_path, [check_statement.CheckStatement, check_statement_files.CheckStatementFiles], [], collect_error)
     assert len(errors) == 0, f'Errors found: {errors}'
-    bad_problems = ['problem_tex', 'probelm', 'problem_eng']
+    bad_problems = ['problem_tex', 'probelm', 'problem_eng', 'problem_copy']
     for bad_problem in bad_problems:
         problem_path = Path(__file__).parent / 'problems' / bad_problem
         errors = []
         directory_dfs(problem_path, [check_statement.CheckStatement, check_statement_files.CheckStatementFiles], [], collect_error)
         error_str = ''.join(errors).lower()
+        #print(f"problem: {bad_problem}", error_str, "\n")
         assert not 'no statement' in error_str, f'Failed to find statement in bad problem {bad_problem}'
         assert len(errors) > 0, f'No errors found in bad problem {bad_problem}'

@@ -16,6 +16,7 @@ class CheckStatementFiles(Checker):
 
         statement_path = path / "problem_statement"
 
+        known_languages = ['sv', 'en', 'da']
         for statement in get_statements(statement_path):
             name = statement.name
             if name.count(".")==1:
@@ -23,6 +24,11 @@ class CheckStatementFiles(Checker):
             pattern = r'^(problem\..+\.(tex|md))$'
             if not re.fullmatch(pattern, name):
                 self.print_error(f"Statement name {name} does not match problem.<language>.md or problem.<language>.tex")
+            language = re.findall(r'^problem\.(.+?)\.(tex|md)$', name)
+            if language:
+                lang_code = language[0][0]
+                if lang_code not in known_languages:
+                    self.print_warning(f"Unknown language code '{lang_code}' in statement file '{name}'")
 
     def handle_problem(self, path):
         self.check_statement_files(path)

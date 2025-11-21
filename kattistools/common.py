@@ -25,6 +25,7 @@ def is_statement(file: Path) -> bool:
     if file.suffix not in {".tex", ".md"}:
         return False
     first_part = file.name.split('.')[0]
+    # Fuzzy matching to allow us to give errors for misspelled statements
     if edit_distance(first_part, "problem") > 3:
         return False
     return True
