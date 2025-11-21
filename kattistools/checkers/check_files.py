@@ -1,27 +1,13 @@
 from pathlib import Path
 
+from kattistools.common import get_statements
 from kattistools.checkers.checker import Checker
 import re
 
 class CheckFiles(Checker):
     def __init__(self, path):
-        super().__init__("Statement files", path)
+        super().__init__("Problem files", path)
         self.handle_problem(path)
-
-    def check_statement_files(self, path: Path):
-        if not (path / 'problem_statement').exists():
-            self.print_error("no statement")
-            return
-
-        statement_path = path / "problem_statement"
-
-        for statement in list(statement_path.rglob("*.tex")) + list(statement_path.rglob("*.md")):
-            name = statement.name
-            if name.count(".")==1:
-                self.print_error(f"Statement name {name} lacks language code (e.g .sv)")
-            pattern = r'^(problem\..+\.(tex|md))$'
-            if not re.fullmatch(pattern, name):
-                self.print_error(f"Statement name {name} does not match problem.<language>.md or problem.<language>.tex")
 
     def check_input_validator(self, path):
         if not (path / 'input_validators').exists():
@@ -35,6 +21,5 @@ class CheckFiles(Checker):
             self.print_error("testdata.yaml in root")
 
     def handle_problem(self, path):
-        self.check_statement_files(path)
         self.check_input_validator(path)
         self.check_testdata_root(path)

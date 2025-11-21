@@ -11,7 +11,7 @@ CONSISTENT_SOURCE_CHECKER_NAME = 'Consistent source'
 # For example, if we find
 # NCPC 2025
 # and
-# NCPC 2024
+# NPCC 2024
 # in the same folder, that's a likely miss
 class ConsistentSourceChecker(Checker):
     def __init__(self, path):
@@ -30,7 +30,7 @@ class ConsistentSourceChecker(Checker):
         sources = []
         for problem in problems:
             with open(problem / 'problem.yaml', 'r') as f:
-                problem_yaml = yaml.safe_load(f)
+                problem_yaml = yaml.safe_load(f) or {}
                 if 'source' in problem_yaml:
                     sources.append(problem_yaml['source'])
         

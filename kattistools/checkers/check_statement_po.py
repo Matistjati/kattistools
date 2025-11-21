@@ -88,8 +88,6 @@ class CheckStatementPO(Checker):
 
         statements = statement_path.glob('*.tex')
         for statement in statements:
-            if statement.name.count(".")==1:
-                self.print_error("Statement with only .tex")
 
             if ".sv" in statement.name:
                 self.handle_swedish(statement)

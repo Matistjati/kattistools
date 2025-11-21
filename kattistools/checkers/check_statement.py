@@ -1,7 +1,7 @@
 from pathlib import Path
 import string
 
-from kattistools.common import is_interactive
+from kattistools.common import is_interactive, get_statements
 from kattistools.checkers.checker import Checker
 
 class CheckStatement(Checker):
@@ -46,7 +46,7 @@ class CheckStatement(Checker):
                 return False
 
             filtered_lines = filter(lambda line: not ignore_line(line), lines)
-            longest_line = max(len(line) for line in filtered_lines)
+            longest_line = max((len(line) for line in filtered_lines), default=0)
 
         if total_len <= 100:
             self.print_warning(f"({language}) statement is unreasonably short ({total_len} chars)")
@@ -183,12 +183,11 @@ class CheckStatement(Checker):
             self.print_error("Problem has no statement")
             return
 
-        statements = statement_path.glob('*.tex')
-        for statement in statements:
+        for statement in get_statements(statement_path):
             if statement.name.count(".")==1:
                 self.print_error("Statement with only .tex")
             language = statement.name.split('.')[1]
-            
+
             if language == 'sv':
                 self.handle_swedish(statement)
             if language == 'en':

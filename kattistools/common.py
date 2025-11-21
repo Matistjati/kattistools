@@ -19,6 +19,23 @@ def is_generator(file: Path) -> bool:
             return False
     return True
 
+def is_statement(file: Path) -> bool:
+    if not file.is_file():
+        return False
+    if file.suffix not in {".tex", ".md"}:
+        return False
+    first_part = file.name.split('.')[0]
+    if edit_distance(first_part, "problem") > 3:
+        return False
+    return True
+
+def get_statements(statement_path: Path) -> list[Path]:
+    statements = []
+    for statement in list(statement_path.glob('*.tex')) + list(statement_path.glob('*.md')):
+        if is_statement(statement):
+            statements.append(statement)
+    return statements
+
 def is_interactive(problem: Path) -> bool:
     with open(problem / 'problem.yaml', 'r') as f:
         return 'interactive' in f.read()
