@@ -20,6 +20,7 @@ from kattistools.checkers.check_files import CheckFiles
 from kattistools.checkers.check_has_languages import CheckStatementLanguages
 from kattistools.checkers.check_pragma import CheckPragma
 from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
+from kattistools.checkers.check_unique_uuid import UniqueUUIDChecker
 from kattistools.common import *
 
 default_checkers = [
@@ -40,7 +41,8 @@ strict_checkers = [
 ]
 
 contest_checkers = [
-    ConsistentSourceChecker
+    ConsistentSourceChecker,
+    UniqueUUIDChecker
 ]
 
 def is_interactive(path: Path):
