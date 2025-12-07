@@ -26,6 +26,7 @@ class ProblemYamlChecker(Checker):
         competitions["lager"]="lägertävling"
         competitions["final"]="final"
         competitions["langtavling"]="långtävling"
+        competitions["unused"] = ""
 
         for c, realc in competitions.items():
             if c in path.resolve().parts:
@@ -97,7 +98,7 @@ class ProblemYamlChecker(Checker):
                     has_test_data_groups = True
 
         if not has_test_data_groups:
-            self.print_error("Missing grading: show_test_data_groups: true in problem.yaml")
+            self.print_error("Missing grading: 'show_test_data_groups: true' in problem.yaml")
 
 
         # Forbid name until the new problem format

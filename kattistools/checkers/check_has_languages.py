@@ -11,7 +11,6 @@ class CheckStatementLanguages(Checker):
 
     def handle_problem(self, path):
         if not (path / 'problem_statement').exists():
-            self.print_error("no statement")
             return
 
         statement_path = Path(path) / "problem_statement"
@@ -31,8 +30,3 @@ class CheckStatementLanguages(Checker):
                 if closest_dist<=3:
                     self.print_error(f"Did you misspell {file.name}? Similar to {closest_name}")
 
-        if not (statement_path / "problem.sv.tex").exists():
-            self.print_warning("problem.sv.tex is missing")
-
-        if not (statement_path / "problem.en.tex").exists():
-            self.print_warning("problem.en.tex is missing")

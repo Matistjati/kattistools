@@ -19,6 +19,7 @@ from kattistools.checkers.check_statement_po import CheckStatementPO
 from kattistools.checkers.check_files import CheckFiles
 from kattistools.checkers.check_has_languages import CheckStatementLanguages
 from kattistools.checkers.check_pragma import CheckPragma
+from kattistools.checkers.check_ioi_scoring import IOIScoringChecker
 from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
 from kattistools.checkers.check_unique_uuid import UniqueUUIDChecker
 from kattistools.common import *
@@ -33,7 +34,8 @@ default_checkers = [
     CheckFiles,
     CheckStatementLanguages,
     CheckPragma,
-    CheckStatementFiles
+    CheckStatementFiles,
+    IOIScoringChecker
 ]
 
 strict_checkers = [

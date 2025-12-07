@@ -61,13 +61,10 @@ class CheckScoreMatchesStatement(Checker):
 
     def handle_problem(self, path):
         if not (path / 'data').exists():
-            self.print_error("Problem has no data")
             return
         if not (path / 'data' / 'secret').exists():
-            self.print_error("Problem has no secret data")
             return
         if not (path / 'problem_statement').exists():
-            self.print_error("Problem has no statement")
             return
 
         secret_path = path / 'data' / 'secret'

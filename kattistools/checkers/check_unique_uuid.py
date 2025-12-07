@@ -2,7 +2,7 @@ from pathlib import Path
 import yaml
 
 from kattistools.checkers.checker import Checker
-from kattistools.common import is_problem, edit_distance
+from kattistools.common import is_problem
 
 
 class UniqueUUIDChecker(Checker):
@@ -29,5 +29,4 @@ class UniqueUUIDChecker(Checker):
                         self.print_error(f"UUID collision: both {problem} and {uuids[uuid]} have same UUID")
                     else:
                         uuids[uuid] = problem
-        
-        
+

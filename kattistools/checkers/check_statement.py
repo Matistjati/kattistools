@@ -180,7 +180,6 @@ class CheckStatement(Checker):
     def handle_problem(self, path: Path):
         statement_path = path / 'problem_statement'
         if not statement_path.exists():
-            self.print_error("Problem has no statement")
             return
 
         for statement in get_statements(statement_path):

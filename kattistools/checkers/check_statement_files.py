@@ -11,7 +11,6 @@ class CheckStatementFiles(Checker):
 
     def check_statement_files(self, path: Path):
         if not (path / 'problem_statement').exists():
-            self.print_error("no statement")
             return
 
         statement_path = path / "problem_statement"

@@ -83,12 +83,10 @@ class CheckStatementPO(Checker):
     def handle_problem(self, path):
         statement_path = path / 'problem_statement'
         if not statement_path.exists():
-            self.print_error("No statement")
             return
 
         statements = statement_path.glob('*.tex')
         for statement in statements:
-
             if ".sv" in statement.name:
                 self.handle_swedish(statement)
             if ".en" in statement.name:

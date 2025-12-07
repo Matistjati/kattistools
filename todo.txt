@@ -1,7 +1,5 @@
 # High prio
-add warning if IOI scoring will not apply
 warn if edit date of the generator is older than the files in secret
-better statement length checking
 
 # Medium prio
 input should be split across lines

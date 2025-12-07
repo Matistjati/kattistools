@@ -18,7 +18,6 @@ class GeneratorChecker(Checker):
     def handle_problem(self, path):
         data_path = path / 'data'
         if not data_path.exists():
-            self.print_warning("Did not find any secret data")
             return
 
         # Find the order of subtask defined in generator (order expected by author)
