@@ -2,11 +2,12 @@ from pathlib import Path
 import yaml
 
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 # Checks that IOI scoring will work on the problem
 class IOIScoringChecker(Checker):
-    def __init__(self, path):
-        super().__init__("IOI scoring", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("IOI scoring", path, args)
         self.handle_problem(path)
 
     def directory_is_custom_grader(self, path: Path, parent_value: bool) -> bool:

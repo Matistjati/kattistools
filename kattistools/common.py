@@ -46,6 +46,12 @@ def count_subtasks(problem_path: Path):
     secret_path = problem_path / 'data' / 'secret'
     return len([path for path in secret_path.glob('*') if path.is_dir()])
 
+def get_known_statement_names():
+    NAMES_PATH = Path(__file__).parent.parent / "data" / "names.txt"
+    with open(NAMES_PATH, 'r') as f:
+        names = [name.strip() for name in f.readlines()]
+    return [f"{name}s" for name in names]
+
 # Allows insert, delete, substitution and swapping two adjacent
 def edit_distance(s1, s2):
     m, n = len(s1), len(s2)

@@ -2,10 +2,11 @@ from pathlib import Path
 
 from kattistools.common import is_interactive, count_subtasks
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 class CheckStatementPO(Checker):
-    def __init__(self, path):
-        super().__init__("PO statement", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("PO statement", path, args)
         self.problem_path = path
         self.is_interactive = is_interactive(path)
         self.handle_problem(path)
@@ -81,6 +82,8 @@ class CheckStatementPO(Checker):
 
 
     def handle_problem(self, path):
+        if not self.is_po_problem():
+            return
         statement_path = path / 'problem_statement'
         if not statement_path.exists():
             return

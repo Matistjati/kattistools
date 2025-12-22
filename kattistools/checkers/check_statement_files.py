@@ -1,12 +1,13 @@
 from pathlib import Path
+import re
 
 from kattistools.common import get_statements
 from kattistools.checkers.checker import Checker
-import re
+from kattistools.args import Args
 
 class CheckStatementFiles(Checker):
-    def __init__(self, path):
-        super().__init__("Statement files", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("Statement files", path, args)
         self.handle_problem(path)
 
     def check_statement_files(self, path: Path):

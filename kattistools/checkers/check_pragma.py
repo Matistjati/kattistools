@@ -1,13 +1,14 @@
 from pathlib import Path
 
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 PRAGMA_CHECKER_NAME = "check pragma"
 
 
 class CheckPragma(Checker):
-    def __init__(self, path):
-        super().__init__(PRAGMA_CHECKER_NAME, path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__(PRAGMA_CHECKER_NAME, path, args)
         self.handle_problem(path)
 
     # if we use

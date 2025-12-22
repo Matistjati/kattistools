@@ -2,10 +2,11 @@ from pathlib import Path
 
 from kattistools.common import edit_distance
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 class CheckStatementLanguages(Checker):
-    def __init__(self, path):
-        super().__init__("statement language", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("statement language", path, args)
         self.is_interactive = False
         self.handle_problem(path)
 

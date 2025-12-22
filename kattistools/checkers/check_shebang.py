@@ -2,19 +2,22 @@ from pathlib import Path
 from functools import reduce
 
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 # Check that all python files have #!/usr/bin/python3
 class CheckPythonShebang(Checker):
-    def __init__(self, path):
-        super().__init__("check python has shebang", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("check python has shebang", path, args)
         self.handle_problem(path)
 
     def glob_python_files(self, path: Path):
         return list(path.rglob('*.py'))
 
     def handle_problem(self, path):
-        # We don't care about generators or testdata_tools python 2/3
+        if not self.args.strict:
+            return
 
+        # We don't care about generators or testdata_tools python 2/3
         problemtools_paths = ['generators', 'submissions', 'input_validators', 'output_validators']
         for file in reduce(lambda x, y: x + y, (self.glob_python_files(path / dir) for dir in problemtools_paths)):
             if 'data' in file.resolve().parts or 'testdata_tools' in file.resolve().parts:

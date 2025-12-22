@@ -1,14 +1,18 @@
 from pathlib import Path
 
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 # Check that the template is not too long
 class CheckCPPTemplate(Checker):
-    def __init__(self, path):
-        super().__init__("check C++ template", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("check C++ template", path, args)
         self.handle_problem(path)
 
     def handle_problem(self, path):
+        if not self.args.strict:
+            return
+        
         for file in path.rglob('*.cpp'):
             with open(file,"r") as f:
                 num_defines = len(list(filter(lambda line: line.startswith('#define'), f.readlines())))

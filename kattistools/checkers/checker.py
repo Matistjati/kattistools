@@ -1,9 +1,10 @@
 from kattistools.common import *
-
+from kattistools.args import Args
 
 class Checker:
-    def __init__(self, name, path):
+    def __init__(self, name: str, path: Path, args: Args):
         self.name = name
+        self.args = args
         self.path = path
         self.errors = {}
 
@@ -20,4 +21,15 @@ class Checker:
 
     def print_info(self, message):
         self.print_generic("[#75ddff]Info:[/#75ddff]", message)
+
+    def is_po_problem(self):
+        PO_repos = [
+            "swedish-olympiad-",
+            "egoi-qual",
+            "manadens"
+        ]
+        for repo in PO_repos:
+            if any(repo in part for part in self.path.parts):
+                return True
+        return self.args.programmeringsolympiden 
 

@@ -3,10 +3,11 @@ import yaml
 
 from kattistools.checkers.checker import Checker
 from kattistools.common import edit_distance
+from kattistools.args import Args
 
 class ProblemYamlChecker(Checker):
-    def __init__(self, path):
-        super().__init__("problem.yaml", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("problem.yaml", path, args)
         self.handle_problem(path)
 
     def any_begins_case_insensitive(self, lines, needle):
@@ -64,6 +65,8 @@ class ProblemYamlChecker(Checker):
 
 
     def check_rights_owner(self, yaml):
+        if not self.is_po_problem():
+            return
         # If there is no owner, we should change it to PO
         if 'rights_owner' in yaml:
             desired_rights_owner = 'Programmeringsolympiaden'
@@ -87,9 +90,9 @@ class ProblemYamlChecker(Checker):
         self.check_rights_owner(problem_yaml)
 
         # "yes" meaning true is removed in newer yaml versions
-        if self.any_begins_case_insensitive(lines, "show_test_data_groups: yes") or \
-           self.any_begins_case_insensitive(lines, "show_test_data_groups:yes"):
-            self.print_error("show_test_data_groups should be \"true\", not \"yes\"")
+        if self.args.strict and self.any_begins_case_insensitive(lines, "show_test_data_groups: yes") or \
+             self.any_begins_case_insensitive(lines, "show_test_data_groups:yes"):
+            self.print_warning("show_test_data_groups should be \"true\", not \"yes\"")
 
         has_test_data_groups = False
         if 'grading' in problem_yaml:

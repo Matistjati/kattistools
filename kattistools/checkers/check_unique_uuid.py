@@ -3,11 +3,12 @@ import yaml
 
 from kattistools.checkers.checker import Checker
 from kattistools.common import is_problem
+from kattistools.args import Args
 
 
 class UniqueUUIDChecker(Checker):
-    def __init__(self, path):
-        super().__init__("Unique UUID:s", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("Unique UUID:s", path, args)
         self.handle_contest(path)
 
     def gather_problems(self, path: Path):

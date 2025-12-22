@@ -1,5 +1,6 @@
 # High prio
-warn if edit date of the generator is older than the files in secret
+--exclude-dir
+ignore "" within \texttt
 
 # Medium prio
 input should be split across lines

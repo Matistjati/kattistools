@@ -2,6 +2,7 @@ from pathlib import Path
 
 from kattistools.check_problem import directory_dfs
 import kattistools.checkers.check_pragma as check_pragma
+from kattistools.args import parse_only_path_args
 
 def test_pragma_checker():
     errors = []
@@ -10,7 +11,7 @@ def test_pragma_checker():
         for _, value in e.items():
             errors += value
     problem_path = Path(__file__).parent / 'problems' / 'pragma'
-    directory_dfs(problem_path, [check_pragma.CheckPragma], [], collect_error)
+    directory_dfs(parse_only_path_args(problem_path), [check_pragma.CheckPragma], [], collect_error)
     errors = ''.join(errors)
     BAD_FILES = ['unmitigated.cpp', 'optimization.cpp', 'multistring_target.cpp',
                  'splitpragma.cpp']

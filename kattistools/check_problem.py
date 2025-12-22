@@ -23,6 +23,7 @@ from kattistools.checkers.check_ioi_scoring import IOIScoringChecker
 from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
 from kattistools.checkers.check_unique_uuid import UniqueUUIDChecker
 from kattistools.common import *
+from kattistools.args import Args, parse_cmdline_args
 
 default_checkers = [
     GeneratorChecker,
@@ -35,10 +36,7 @@ default_checkers = [
     CheckStatementLanguages,
     CheckPragma,
     CheckStatementFiles,
-    IOIScoringChecker
-]
-
-strict_checkers = [
+    IOIScoringChecker,
     CheckCPPTemplate,
 ]
 
@@ -83,51 +81,45 @@ def print_errors(path: Path, errors):
 
 
 # Each checker is involved in the root of each problem exactly once
-def directory_dfs(path: Path, problem_checkers, contest_checkers, error_callback):
-    if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
-        return
-    
-    if path.is_file():
-        return
-    
-    def run_checkers(checkers):
-        errors = {}
-        for check in checkers:
-            checker = check(path)
-            for error_name, error_list in checker.errors.items():
-                error_list = [f"{i} ({checker.name})" for i in error_list]
-                if error_name not in errors:
-                    errors[error_name] = []
-                errors[error_name] += error_list
-            
-        if errors:
-            error_callback(path, errors)
+def directory_dfs(args: Args, problem_checkers, contest_checkers, error_callback):
+    def _directory_dfs(path: Path, args: Args, problem_checkers, contest_checkers, error_callback):
+        if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
+            return
 
-    if is_problem(path):
-        run_checkers(problem_checkers)
-        return
-    else:
-        run_checkers(contest_checkers)
+        if path.is_file():
+            return
 
-    children = path.iterdir()
-    for dir in reversed(sorted(children)):
-        directory_dfs(dir, problem_checkers, contest_checkers, error_callback)
+        def run_checkers(checkers):
+            errors = {}
+            for check in checkers:
+                checker = check(path, args)
+                for error_name, error_list in checker.errors.items():
+                    error_list = [f"{i} ({checker.name})" for i in error_list]
+                    if error_name not in errors:
+                        errors[error_name] = []
+                    errors[error_name] += error_list
 
+            if errors:
+                error_callback(path, errors)
+
+        if is_problem(path):
+            run_checkers(problem_checkers)
+            return
+        else:
+            run_checkers(contest_checkers)
+
+        children = path.iterdir()
+        for dir in reversed(sorted(children)):
+            _directory_dfs(dir, args, problem_checkers, contest_checkers, error_callback)
+
+    _directory_dfs(args.path, args, problem_checkers, contest_checkers, error_callback)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Stylecheck PO problems')
-    parser.add_argument('directory', help='Directory to recursively stylecheck')
-    parser.add_argument('-s', '--strict', help='Apply strict checks', action='store_true')
-    args = parser.parse_args()
+    args = parse_cmdline_args()
     
-    directory = args.directory
+    directory = args.path
     if not Path(directory).exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
-        sys.exit(0)
+        sys.exit(1)
 
-    checkers = default_checkers
-    if args.strict:
-        checkers += strict_checkers
-
-    directory_dfs(Path(directory), checkers, contest_checkers, print_errors)
-    
+    directory_dfs(args, default_checkers, contest_checkers, print_errors)

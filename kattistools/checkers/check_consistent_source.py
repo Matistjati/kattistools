@@ -3,6 +3,7 @@ import yaml
 
 from kattistools.checkers.checker import Checker
 from kattistools.common import is_problem, edit_distance
+from kattistools.args import Args
 
 CONSISTENT_SOURCE_CHECKER_NAME = 'Consistent source'
 
@@ -14,8 +15,8 @@ CONSISTENT_SOURCE_CHECKER_NAME = 'Consistent source'
 # NPCC 2024
 # in the same folder, that's a likely miss
 class ConsistentSourceChecker(Checker):
-    def __init__(self, path):
-        super().__init__(CONSISTENT_SOURCE_CHECKER_NAME, path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__(CONSISTENT_SOURCE_CHECKER_NAME, path, args)
         self.handle_contest(path)
 
     def gather_problems(self, path: Path):

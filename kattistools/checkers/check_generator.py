@@ -2,12 +2,12 @@ from pathlib import Path
 
 from kattistools.common import is_generator
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 class GeneratorChecker(Checker):
-    def __init__(self, path):
-        super().__init__("Check generator", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("Check generator", path, args)
         self.handle_problem(path)
-
 
     def get_generator(self, data_path: Path):
         for item in data_path.glob('*'):

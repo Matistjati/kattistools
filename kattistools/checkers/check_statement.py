@@ -1,16 +1,13 @@
 from pathlib import Path
 import string
 
-from kattistools.common import is_interactive, get_statements
+from kattistools.common import is_interactive, get_statements, get_known_statement_names
 from kattistools.checkers.checker import Checker
+from kattistools.args import Args
 
 class CheckStatement(Checker):
-    def __init__(self, path):
-        super().__init__("statement", path)
-        NAMES_PATH = Path(__file__).parent.parent.parent / "data" / "names.txt"
-        with open(NAMES_PATH, 'r') as f:
-            self.names = [name.strip() for name in f.readlines()]
-        self.names += [f"{name}s" for name in self.names]
+    def __init__(self, path: Path, args: Args):
+        super().__init__("statement", path, args)
 
         self.is_interactive = is_interactive(path)
         self.handle_problem(path)
@@ -54,7 +51,34 @@ class CheckStatement(Checker):
         #    self.print_warning(f"({language}) statement has a line of length {longest_line}, which is longer than recommended max of 130")
 
     def check_quotes(self, statement_path, language):
+        def remove_texttt_content_multiline(path):
+            with open(path, "r") as f:
+                lines = f.readlines()
+            """Remove all content inside \texttt{...}, including nested braces and across multiple lines."""
+            result = []
+            texttt_level = 0
+            for line in lines:
+                i = 0
+                tokens = []
+                while i < len(line):
+                    if line.startswith(r"\texttt{", i):
+                        i += len(r"\texttt{")
+                        texttt_level += 1
+                    elif line[i] == '{':
+                        texttt_level += 1
+                    elif line[i] == '}':
+                        texttt_level -= 1
+
+                    if texttt_level == 0:
+                        tokens.append(line[i])
+                    i += 1
+                
+                if tokens:
+                    result.append(''.join(tokens))
+            return set(result)
+
         lines = self.get_unique_lines(statement_path)
+        texttt_free_lines = remove_texttt_content_multiline(statement_path)
 
         weird_quotes = ["’", "’"]
         for quote in weird_quotes:
@@ -80,8 +104,13 @@ class CheckStatement(Checker):
             return
 
         for quote in forbidden_quotes:
-            if self.any_has(lines, quote[0]):
-                ln = [i for i in lines if i.count(quote[0])>0]
+            if quote[0] == '\"':
+                lines_used = texttt_free_lines
+            else:
+                lines_used = lines
+
+            if self.any_has(lines_used, quote[0]):
+                ln = [i for i in lines_used if i.count(quote[0])>0]
                 if len(ln)==0:
                     self.print_error(f"({language}) Don't use {quote[0]}word{quote[1]}, use {correct_quote[0]}word{correct_quote[1]} instead")
 
@@ -163,7 +192,7 @@ class CheckStatement(Checker):
             self.print_error(f'(sv) First letter in problem name "{first_word}" is not capitalized')
             return
         for word in problem_name.split()[1:]:
-            if self.is_capitalized(word[0], prefer_true=False) and word not in self.names:
+            if self.is_capitalized(word[0], prefer_true=False) and word not in get_known_statement_names():
                 self.print_info(f'(sv) First letter in word "{word}" in title is capitalized. Double-check that this is a name')
 
     def handle_english(self, statement_path):

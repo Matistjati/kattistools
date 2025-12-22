@@ -2,10 +2,11 @@ from pathlib import Path
 
 from kattistools.checkers.checker import Checker
 from kattistools.common import count_subtasks
+from kattistools.args import Args
 
 class CheckScoreMatchesStatement(Checker):
-    def __init__(self, path):
-        super().__init__("scores match statement", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("scores match statement", path, args)
         self.handle_problem(path)
 
     def get_secret_scores(self, path: Path):

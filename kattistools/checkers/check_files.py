@@ -2,11 +2,11 @@ from pathlib import Path
 
 from kattistools.common import get_statements
 from kattistools.checkers.checker import Checker
-import re
+from kattistools.args import Args
 
 class CheckFiles(Checker):
-    def __init__(self, path):
-        super().__init__("Problem files", path)
+    def __init__(self, path: Path, args: Args):
+        super().__init__("Problem files", path, args)
         self.handle_problem(path)
 
     def check_input_validator(self, path):
@@ -26,7 +26,7 @@ class CheckFiles(Checker):
             self.print_error("Problem has no problem statement")
             return
 
-        if not (statement_path / "problem.sv.tex").exists():
+        if self.is_po_problem() and not (statement_path / "problem.sv.tex").exists():
             self.print_warning("problem.sv.tex is missing")
 
         if not (statement_path / "problem.en.tex").exists():
