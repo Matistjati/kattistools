@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 from kattistools.common import is_interactive, count_subtasks
 from kattistools.checkers.checker import Checker
@@ -40,6 +41,26 @@ class CheckStatementPO(Checker):
             not self.any_has(lines, r"\begin{tabular}{| l | l | p{12cm} |}"):
             self.print_warning(f"(sv) missing modern subtask box in {path.name}")
             return
+        else:
+            def check():
+                start = [i for i in range(len(lines)) if r"\textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline" in lines[i]]
+                if len(start) > 1:
+                    self.print_warning(f"(sv) More than one subtask box")
+                    return
+                if len(start) == 0:
+                    self.print_warning(f"(sv) missing modern subtask box {path.name}")
+                    return
+                start = start[0]
+                end = [i for i in range(len(lines)) if r"\end{tabular}" in lines[i] and i > start]
+                if len(end) == 0:
+                    self.print_warning(f"(sv) did not close subtask box")
+                    return
+                end = min(end)
+                subtask_lines = lines[start+1:end]
+                for line in subtask_lines:
+                    if not re.fullmatch(r'\s*\$\d+\$\s*&\s*\$\d+\$\s*&\s*.*\s*\\\\\s*\\hline', line.strip()):
+                        self.print_warning(f"(sv) Malformed line in subtask box: \"{line.strip()}\"")
+            check()
         
         if not self.any_has(lines, "Inga ytterligare begränsningar."):
             self.print_warning("(sv) Did you forget \"Inga ytterligare begränsningar.\" in subtask box?")
@@ -67,6 +88,27 @@ class CheckStatementPO(Checker):
         if not self.any_has(lines, r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline") or \
             not self.any_has(lines, r"\begin{tabular}{| l | l | p{12cm} |}"):
             self.print_warning(f"(en) missing modern subtask box {path.name}")
+        else:
+            def check():
+                start = [i for i in range(len(lines)) if r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline" in lines[i]]
+                if len(start) > 1:
+                    self.print_warning(f"(en) More than one subtask box")
+                    return
+                if len(start) == 0:
+                    self.print_warning(f"(en) missing modern subtask box {path.name}")
+                    return
+                start = start[0]
+                end = [i for i in range(len(lines)) if r"\end{tabular}" in lines[i] and i > start]
+                if len(end) == 0:
+                    self.print_warning(f"(en) did not close subtask box")
+                    return
+                end = min(end)
+                subtask_lines = lines[start+1:end]
+                for line in subtask_lines:
+                    if not re.fullmatch(r'\s*\$\d+\$\s*&\s*\$\d+\$\s*&\s*.*\s*\\\\\s*\\hline', line.strip()):
+                        self.print_warning(f"(en) Malformed line in subtask box: \"{line.strip()}\"")
+            check()
+            
         
         if not self.any_has(lines, "No additional constraints."):
             self.print_warning("(en) Did you forget \"No additional constraints.\" in subtask box?")

@@ -1,6 +1,6 @@
 # High prio
 --exclude-dir
-ignore "" within \texttt
+show number of checks suppressed because of cmdline args
 
 # Medium prio
 input should be split across lines

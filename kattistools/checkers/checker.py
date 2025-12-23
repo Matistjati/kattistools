@@ -29,7 +29,7 @@ class Checker:
             "manadens"
         ]
         for repo in PO_repos:
-            if any(repo in part for part in self.path.parts):
+            if any(repo in part for part in self.path.resolve().parts):
                 return True
         return self.args.programmeringsolympiden 
 
