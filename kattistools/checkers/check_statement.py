@@ -1,54 +1,31 @@
 from pathlib import Path
 import string
 
-from kattistools.common import is_interactive, get_statements, get_known_statement_names
+from kattistools.common import get_statements, get_known_statement_names, get_language_code
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
+
+def any_has(lines, needle):
+    return any(needle in line for line in lines)
 
 class CheckStatement(Checker):
     def __init__(self, path: Path, args: Args):
         super().__init__("statement", path, args)
 
-        self.is_interactive = is_interactive(path)
         self.handle_problem(path)
-
-    def any_has(self, lines, needle):
-        return any(needle in line for line in lines)
 
     def get_unique_lines(self, path):
         with open(path, "r") as f:
             return set(f.readlines())
 
     # Checks that the statement is not almost empty
-    # and that no line is too long
-    # Allow long lines in subtask box
-    def check_statement_length(self, statement_path, language):
+    def check_statement_length(self, statement_path):
         with open(statement_path, 'r') as f:
             lines = f.readlines()
             total_len = sum(len(line) for line in lines)
 
-            def ignore_line(line):
-                if line.startswith(r'\illustration'):
-                    return True
-
-                if line.strip().startswith(r'\item') and len(line) < 170:
-                    return True
-                if line.strip().startswith(r'\caption') and len(line) < 150:
-                    return True
-                line = line.strip()
-                if len(line) < 3:
-                    return False
-                if line[0] == '$' and line[2] == '$' and line[1].isnumeric():
-                    return True
-                return False
-
-            filtered_lines = filter(lambda line: not ignore_line(line), lines)
-            longest_line = max((len(line) for line in filtered_lines), default=0)
-
         if total_len <= 100:
-            self.print_warning(f"({language}) statement is unreasonably short ({total_len} chars)")
-        #if longest_line > 130:
-        #    self.print_warning(f"({language}) statement has a line of length {longest_line}, which is longer than recommended max of 130")
+            self.print_warning(f"({get_language_code(statement_path)}) statement is unreasonably short ({total_len} chars)")
 
     def check_quotes(self, statement_path, language):
         def remove_texttt_content_multiline(path):
@@ -82,15 +59,15 @@ class CheckStatement(Checker):
 
         weird_quotes = ["’", "’"]
         for quote in weird_quotes:
-            if self.any_has(lines, quote):
+            if any_has(lines, quote):
                 self.print_error(f"({language}) Don't use {quote}")
 
         all_quotes = ["’", "’", "\"", "”", "''", "``"]
         for quote in all_quotes:
-            if self.any_has(lines, f",{quote}"):
+            if any_has(lines, f",{quote}"):
                 self.print_error(f"({language}) Chatgpt error: ,{quote} occurs")
             
-            if self.any_has(lines, f".{quote}"):
+            if any_has(lines, f".{quote}"):
                 self.print_error(f"({language}) Chatgpt error: .{quote} occurs")
 
         forbidden_quotes = [("’","’"), ("\"","\""), ("”", "”")]
@@ -109,7 +86,7 @@ class CheckStatement(Checker):
             else:
                 lines_used = lines
 
-            if self.any_has(lines_used, quote[0]):
+            if any_has(lines_used, quote[0]):
                 ln = [i for i in lines_used if i.count(quote[0])>0]
                 if len(ln)==0:
                     self.print_error(f"({language}) Don't use {quote[0]}word{quote[1]}, use {correct_quote[0]}word{correct_quote[1]} instead")
@@ -161,10 +138,25 @@ class CheckStatement(Checker):
         for line in lines:
             check_line(line)
 
+    def check_subsection(self, path):
+        with open(path, 'r') as f:
+            lines = f.readlines()
+        illegal_subsections = [
+            "subsection{",
+            "subsection*{"
+        ]
+        for subsection in illegal_subsections:
+            if any_has(lines, subsection):
+                self.print_warning(f"({get_language_code(path)}) statement has subsection \"{subsection}" + '}", prefer "\\section*{}"')
+
+        if any_has(lines, 'section{'):
+            self.print_warning(f'({get_language_code(path)})' + r' statement has "\section{}", prefer "\section*{}"')
+
     def handle_all(self, path, language):
-        self.check_statement_length(path,language)
+        self.check_statement_length(path)
         self.check_quotes(path, language)
         self.check_exponents(path, language)
+        self.check_subsection(path)
 
 
     def get_problem_name(self, statement_path):

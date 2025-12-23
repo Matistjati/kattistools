@@ -37,9 +37,18 @@ def get_statements(statement_path: Path) -> list[Path]:
             statements.append(statement)
     return statements
 
-def is_interactive(problem: Path) -> bool:
-    with open(problem / 'problem.yaml', 'r') as f:
-        return 'interactive' in f.read()
+def is_interactive(path: Path):
+    if not (path / 'problem.yaml').exists():
+        return False
+    with open(path / "problem.yaml", "r") as f:
+        return "interactive" in f.read()
+
+def get_language_code(path):
+    parts = path.name.split('.')
+    if len(parts) > 1:
+        return parts[1]
+    return None
+
 
 # Number of subtasks according to secret
 def count_subtasks(problem_path: Path):

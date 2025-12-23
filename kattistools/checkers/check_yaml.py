@@ -65,8 +65,6 @@ class ProblemYamlChecker(Checker):
 
 
     def check_rights_owner(self, yaml):
-        if not self.is_po_problem():
-            return
         # If there is no owner, we should change it to PO
         if 'rights_owner' in yaml:
             desired_rights_owner = 'Programmeringsolympiaden'
@@ -74,7 +72,8 @@ class ProblemYamlChecker(Checker):
             if desired_rights_owner != yaml_rights_owner and edit_distance(desired_rights_owner, yaml_rights_owner) <= 3:
                 self.errors(f"Likely typo: rights_owner is {yaml_rights_owner}, not {desired_rights_owner}")
         else:
-            self.print_warning("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\"")
+            self.print_warning_if("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\"",
+                                  [self.is_po_problem])
 
     def handle_problem(self, path):
         # We can assume that problem.yaml exists, since that is precondition to be considred a problem
@@ -90,9 +89,10 @@ class ProblemYamlChecker(Checker):
         self.check_rights_owner(problem_yaml)
 
         # "yes" meaning true is removed in newer yaml versions
-        if self.args.strict and self.any_begins_case_insensitive(lines, "show_test_data_groups: yes") or \
+        if self.any_begins_case_insensitive(lines, "show_test_data_groups: yes") or \
              self.any_begins_case_insensitive(lines, "show_test_data_groups:yes"):
-            self.print_warning("show_test_data_groups should be \"true\", not \"yes\"")
+            self.print_warning_if("show_test_data_groups should be \"true\", not \"yes\"",
+                                  [self.perform_strict_checks])
 
         has_test_data_groups = False
         if 'grading' in problem_yaml:

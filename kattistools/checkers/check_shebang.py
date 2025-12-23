@@ -14,9 +14,6 @@ class CheckPythonShebang(Checker):
         return list(path.rglob('*.py'))
 
     def handle_problem(self, path):
-        if not self.args.strict:
-            return
-
         # We don't care about generators or testdata_tools python 2/3
         problemtools_paths = ['generators', 'submissions', 'input_validators', 'output_validators']
         for file in reduce(lambda x, y: x + y, (self.glob_python_files(path / dir) for dir in problemtools_paths)):
@@ -25,5 +22,6 @@ class CheckPythonShebang(Checker):
             with open(file,"r") as f:
                 for line in f:
                     if not line.startswith("#!/usr/bin/python3") and not line.startswith("#!/usr/bin/env python3"):
-                        self.print_warning(f"[green].py[/green] file '{'/'.join(file.resolve().parts[-2:])}' does not start with shebang #!/usr/bin/python3")
+                        self.print_warning_if(f"[green].py[/green] file '{'/'.join(file.resolve().parts[-2:])}' does not start with shebang #!/usr/bin/python3",
+                                              [self.perform_strict_checks])
                     break

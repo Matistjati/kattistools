@@ -8,6 +8,7 @@ from rich.console import Console
 EXCLUDED_DIRS = [".git", "testdata_tools"]
 BLUE="#52b2f7"
 
+from kattistools.checkers.checker import Checker
 from kattistools.checkers.check_generator import GeneratorChecker
 from kattistools.checkers.check_yaml import ProblemYamlChecker
 from kattistools.checkers.check_subtask_score import CheckScoreMatchesStatement
@@ -45,13 +46,6 @@ contest_checkers = [
     UniqueUUIDChecker
 ]
 
-def is_interactive(path: Path):
-    if not (path / 'problem.yaml').exists():
-        return False
-    with open(path / "problem.yaml", "r") as f:
-        return "interactive" in f.read()
-
-
 def find_rightmost_year(path: Path) -> int | None:
     year_pattern = re.compile(r'\b(19[7-9]\d|20\d\d|2100)\b')
     
@@ -79,10 +73,16 @@ def print_errors(path: Path, errors):
         console.print("\n".join(error_list))
     console.print("--------------\n\n")
 
+all_skips = {}
+def aggregate_skips(path: Path, skips):
+    for skip_reason, amount in skips.items():
+        if skip_reason not in all_skips:
+            all_skips[skip_reason] = 0
+        all_skips[skip_reason] += amount
 
 # Each checker is involved in the root of each problem exactly once
-def directory_dfs(args: Args, problem_checkers, contest_checkers, error_callback):
-    def _directory_dfs(path: Path, args: Args, problem_checkers, contest_checkers, error_callback):
+def directory_dfs(args: Args, problem_checkers, contest_checkers, error_callback, skip_callback=None):
+    def _directory_dfs(path: Path):
         if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
             return
 
@@ -98,10 +98,12 @@ def directory_dfs(args: Args, problem_checkers, contest_checkers, error_callback
                     if error_name not in errors:
                         errors[error_name] = []
                     errors[error_name] += error_list
+                if checker.skips and skip_callback:
+                    skip_callback(path, checker.skips)
 
             if errors:
                 error_callback(path, errors)
-
+            
         if is_problem(path):
             run_checkers(problem_checkers)
             return
@@ -110,9 +112,9 @@ def directory_dfs(args: Args, problem_checkers, contest_checkers, error_callback
 
         children = path.iterdir()
         for dir in reversed(sorted(children)):
-            _directory_dfs(dir, args, problem_checkers, contest_checkers, error_callback)
+            _directory_dfs(dir)
 
-    _directory_dfs(args.path, args, problem_checkers, contest_checkers, error_callback)
+    _directory_dfs(args.path)
 
 if __name__ == "__main__":
     args = parse_cmdline_args()
@@ -122,4 +124,9 @@ if __name__ == "__main__":
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(1)
 
-    directory_dfs(args, default_checkers, contest_checkers, print_errors)
+    directory_dfs(args, default_checkers, contest_checkers, print_errors, aggregate_skips)
+
+    if all_skips:
+        console.print(f"[{BLUE}]Info[/{BLUE}]: suppressed errors/warnings because following modes were not set")
+        for skip_reason, amount in all_skips.items():
+            console.print(f"\t{skip_reason}: {amount}")
