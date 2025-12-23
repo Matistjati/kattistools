@@ -1,16 +1,11 @@
-# High prio
---exclude-dir
-show number of checks suppressed because of cmdline args
-
 # Medium prio
 input should be split across lines
-a finite score range is set for all levels
-better "Inga ytterligare begränsningar." (only check for typos)
+subtask scores are reasonable (finite, add up etc.)
 (hard) are there undefined variables? basically, some variable got renamed but we forgot to change all occurences.
 exclude dir cmd line option
 
 # Low prio
 only check subtask box if the problem has more than one subtask
-no EOF in input validators
 anti chatgpt sample case
+no EOF in input validators
 check that no input validator uses bits/stdc++.h

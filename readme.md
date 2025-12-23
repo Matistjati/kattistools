@@ -8,11 +8,12 @@ to your `.bashrc`: `alias check="clear && ~/software/kattistools/bin/check_probl
 software with the folder you're using).
 
 ## Philosophy
-What this tool tries to do is in some sense impossible in the general. Therefore, there is some amount of
-trade-off between false positives and false negatives. We have chosen to prioritze:
+Priorities:
+
 - Minimizing false negatives. Therefore, false positives become more common.
-- Not adding any metadata to problem packages. The only way that problem packages should change from
-using this tool is that they are of higher quality. No #exclude
+- Don't add any metadata to problem packages. The only way that problem packages should change from
+using this tool is that they are of higher quality.
+- Checks should be cheap and run fast. It currently takes 5 seconds to check all 400 problems in my problems folder
 
 ## Example usage
 
