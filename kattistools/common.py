@@ -47,7 +47,7 @@ def get_language_code(path):
     parts = path.name.split('.')
     if len(parts) > 1:
         return parts[1]
-    return None
+    raise Exception(f"Could not find language code for {path}")
 
 
 # Number of subtasks according to secret
@@ -59,7 +59,7 @@ def get_known_statement_names():
     NAMES_PATH = Path(__file__).parent.parent / "data" / "names.txt"
     with open(NAMES_PATH, 'r') as f:
         names = [name.strip() for name in f.readlines()]
-    return [f"{name}s" for name in names]
+    return names + [f"{name}s" for name in names]
 
 # Allows insert, delete, substitution and swapping two adjacent
 def edit_distance(s1, s2):

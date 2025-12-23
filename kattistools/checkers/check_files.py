@@ -37,10 +37,10 @@ class CheckFiles(Checker):
         if not data_path.exists():
             self.print_error("Problem has no test data")
 
-        if not (data_path / 'secret'):
+        if not (data_path / 'secret').exists():
             self.print_warning("Problem has no secret test data")
 
-        if not (data_path / 'sample'):
+        if not (data_path / 'sample').exists():
             self.print_warning("Problem has no sample test data")
 
 

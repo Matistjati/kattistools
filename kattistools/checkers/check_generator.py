@@ -40,7 +40,6 @@ class GeneratorChecker(Checker):
         # Find subtasks, and order the same as kattis
         secret_path = data_path / 'secret'
         if not secret_path.exists():
-            self.print_warning("No secret data for problem")
             return
         
         # Check: did not forget to run generator after changes
@@ -48,7 +47,8 @@ class GeneratorChecker(Checker):
         generator_change_date = gen.stat().st_mtime
         secret_change_date = secret_path.stat().st_mtime
         if generator_change_date > secret_change_date:
-            self.print_error("Generator is newer than secret data. You should re-run the generator.")
+            self.print_error_if("Generator is newer than secret data. You should re-run the generator.",
+                                [self.perform_finalization_checks])
 
         secret_groups = sorted(p.stem for p in secret_path.glob('*/') if p.is_dir())
 

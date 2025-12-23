@@ -30,4 +30,4 @@ class IOIScoringChecker(Checker):
         data_custom = self.directory_is_custom_grader(data, False)
         secret_custom = self.directory_is_custom_grader(secret, data_custom)
         if data_custom or secret_custom:
-            self.print_error("IOI scoring will not apply to this problem. Read mor here: https://github.com/Matistjati/Multiplicative_accept_score_Kattis")
+            self.print_error("IOI scoring will not apply to this problem. Read more here: https://github.com/Matistjati/Multiplicative_accept_score_Kattis")

@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from kattistools.checkers.checker import Checker
-from kattistools.common import count_subtasks
+from kattistools.checkers.check_subtask_box import parse_subtask_box
+from kattistools.common import count_subtasks, get_statements, get_language_code
 from kattistools.args import Args
 
 class CheckScoreMatchesStatement(Checker):
@@ -23,44 +24,30 @@ class CheckScoreMatchesStatement(Checker):
 
     def get_statement_scores(self, statement_path: Path):
         statement_scores: list[list[int]] = []
+        statement_languages: list[str] = []
 
-        for stpath in statement_path.glob('*.tex'):
-            scores = []
-            with open(stpath, "r") as f:
-                inside_box = False
-                counter = 1
-                for line in f:
-                    if line.startswith(r"  \textbf{Gr"):
-                        inside_box = 2
-                    if inside_box < 2:
-                        continue
-                    if inside_box:
-                        s = line.split()
-                        s = [i.replace("$","") for i in s]
-                        numbercnt = sum(i.isdigit() for i in s)
-                        if numbercnt>1:
-                            numbers = [int(i) for i in s if i.isdigit()]
-                            if numbers[0]!=counter:
-                                self.print_error(f"mismatch group count for {''.join(stpath.resolve().parts[-1])}. saw {numbers[0]}, expected {counter}")
-                                return
-                            scores.append(numbers[1])
-                            counter+=1
-                    if line.startswith("\\end{tabular}"):
-                        inside_box = False
-
+        for stpath in get_statements(statement_path):
+            box = parse_subtask_box(stpath)
+            if not box:
+                continue
+            scores = [line.point_value for line in box.subtask_lines]
             statement_scores.append(scores)
+            statement_languages.append(get_language_code(stpath))
+
         if len(statement_scores)==0:
-            self.print_error(f"Did not manage to find subtask scores in {statement_path}")
             return None
 
         if not all(statement_scores[0]==score for score in statement_scores):
-            self.print_error(f"different statements disagree on scores for {statement_path}")
-            self.print_error(statement_scores)
-        
+            self.print_error(f"Different statements disagree on subtask scores")
+            for lang_code, scores in zip(statement_languages, statement_scores):
+                self.print_error(f"\t{lang_code}: {scores}")
+            return None
+
         return statement_scores[0]
 
 
     def handle_problem(self, path):
+        self.add_message_condition(self.is_po_problem)
         if not (path / 'data').exists():
             return
         if not (path / 'data' / 'secret').exists():
@@ -73,14 +60,18 @@ class CheckScoreMatchesStatement(Checker):
         if not secret_scores or len(secret_scores) == 0:
             self.print_error("No subtask scores specified in secret")
             return
+
         if sum(secret_scores) != 100:
-            self.print_warning(f"secret: total score is not 100, is {sum(secret_scores)}")
+            self.print_warning(f"secret: total score is {sum(secret_scores)}, not 100")
 
         # We only have scoring text if we have subtasks
         if count_subtasks(path) > 1:
             statement_path = path / "problem_statement"
             statement_scores = self.get_statement_scores(statement_path)
+            if not statement_scores:
+                return
 
-            if statement_scores!=secret_scores:
-                self.print_error("Score mismatch statement/secret")
-                self.print_error(f"Secret: {secret_scores}, statement: {statement_scores}")
+            if statement_scores != secret_scores:
+                self.print_error("Score mismatch between statement and test data")
+                self.print_error(f"\tSecret:       {secret_scores}")
+                self.print_error(f"\tStatement(s): {statement_scores}")

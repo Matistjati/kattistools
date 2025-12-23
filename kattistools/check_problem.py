@@ -17,6 +17,7 @@ from kattistools.checkers.check_template import CheckCPPTemplate
 from kattistools.checkers.check_statement import CheckStatement
 from kattistools.checkers.check_statement_files import CheckStatementFiles
 from kattistools.checkers.check_statement_po import CheckStatementPO
+from kattistools.checkers.check_subtask_box import CheckSubtaskBox
 from kattistools.checkers.check_files import CheckFiles
 from kattistools.checkers.check_has_languages import CheckStatementLanguages
 from kattistools.checkers.check_pragma import CheckPragma
@@ -33,6 +34,7 @@ default_checkers = [
     CheckPythonShebang,
     CheckStatement,
     CheckStatementPO,
+    CheckSubtaskBox,
     CheckFiles,
     CheckStatementLanguages,
     CheckPragma,

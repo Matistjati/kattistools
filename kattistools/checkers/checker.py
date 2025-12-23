@@ -28,6 +28,9 @@ class Checker:
     def print_error(self, message):
         self.print_generic("[red]Errors:[/red]", message)
 
+    def print_error_if(self, message, checks):
+        self.print_generic("[red]Errors:[/red]", message, checks)
+
     def print_warning(self, message):
         self.print_generic("[#FFFF00]Warnings:[/#FFFF00]", message)
 
@@ -40,7 +43,8 @@ class Checker:
     def add_skip_note(self, fn):
         known_skips = {
             self.perform_strict_checks: "strict",
-            self.is_po_problem: "PO"
+            self.is_po_problem: "PO",
+            self.perform_finalization_checks: "finalize"
         }
         if fn not in known_skips:
             raise Exception(f"Has not added name for function {fn}")
@@ -75,3 +79,6 @@ class Checker:
 
     def perform_strict_checks(self):
         return self.args.strict
+
+    def perform_finalization_checks(self):
+        return self.args.finalize
