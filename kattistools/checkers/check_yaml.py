@@ -94,21 +94,17 @@ class ProblemYamlChecker(Checker):
             self.print_warning_if("show_test_data_groups should be \"true\", not \"yes\"",
                                   [self.perform_strict_checks])
 
-        has_test_data_groups = False
-        if 'grading' in problem_yaml:
-            if 'show_test_data_groups' in problem_yaml['grading']:
-                if problem_yaml['grading']['show_test_data_groups'] == True:
-                    has_test_data_groups = True
-
-        if not has_test_data_groups:
-            self.print_error("Missing grading: 'show_test_data_groups: true' in problem.yaml")
-
-
         # Forbid name until the new problem format
-        forbidden_keys = ["name", "on_reject", "range", "objective"]
+        forbidden_keys = ["on_reject", "range", "objective"]
         for key in forbidden_keys:
             if key in problem_yaml:
                 self.print_error(f"problem.yaml should not have field {key}")
+
+        useless_keys_legacy = ["name"]
+        for key in useless_keys_legacy:
+            if key in problem_yaml:
+                self.print_warning_if(f"problem.yaml field {key} does nothing in problem format Legacy",
+                                      [self.perform_strict_checks])
 
         disallowed_author_special_chars = [
             '/', '\\', '<', '>', '$', '"', "'",
@@ -128,6 +124,18 @@ class ProblemYamlChecker(Checker):
         if 'type' in problem_yaml:
             if 'scoring' in problem_yaml['type']:
                 is_scoring=True
+        
+        if is_scoring:
+            has_test_data_groups = False
+            if 'grading' in problem_yaml:
+                if 'show_test_data_groups' in problem_yaml['grading']:
+                    if problem_yaml['grading']['show_test_data_groups'] == True:
+                        has_test_data_groups = True
+
+            if not has_test_data_groups:
+                self.print_error("Missing grading: 'show_test_data_groups: true' in problem.yaml")
+
 
         if not is_scoring:
-            self.print_error("problem.yaml must have 'type: scoring'")
+            self.print_error_if("problem.yaml must have 'type: scoring'",
+                             [self.is_po_problem])
