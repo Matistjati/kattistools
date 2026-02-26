@@ -8,6 +8,7 @@ class Args:
     programmeringsolympiden: bool
     strict: bool
     finalize: bool
+    all: bool
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='Stylecheck PO problems')
@@ -15,10 +16,11 @@ def get_argparser():
     parser.add_argument('-s', '--strict', help='Apply strict checks', action='store_true')
     parser.add_argument('--PO', help='Apply Programmeringsolympiaden checks', action='store_true')
     parser.add_argument('--finalize', help='Apply checks that are only beneficial as a last check', action='store_true')
+    parser.add_argument('--all', help='Enable all checks', action='store_true')
     return parser
 
 def argparse_to_args(args):
-    return Args(path=args.directory, programmeringsolympiden=args.PO, strict=args.strict, finalize=args.finalize)
+    return Args(path=args.directory, programmeringsolympiden=args.PO, strict=args.strict, finalize=args.finalize, all=args.all)
 
 def parse_only_path_args(path: Path):
     return argparse_to_args(get_argparser().parse_args([str(path)]))

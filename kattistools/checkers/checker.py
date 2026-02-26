@@ -17,10 +17,11 @@ class Checker:
         self.message_conditions.remove(fn)
 
     def print_generic(self, kind, message, extra_checks=None):
-        for check in self.message_conditions + (extra_checks or []):
-            if not check():
-                self.add_skip_note(check)
-                return
+        if not self.args.all:
+            for check in self.message_conditions + (extra_checks or []):
+                if not check():
+                    self.add_skip_note(check)
+                    return
         if kind not in self.errors:
             self.errors[kind] = []
         self.errors[kind].append(message)

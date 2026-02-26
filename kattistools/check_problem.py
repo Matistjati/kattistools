@@ -12,7 +12,6 @@ from kattistools.checkers.checker import Checker
 from kattistools.checkers.check_generator import GeneratorChecker
 from kattistools.checkers.check_yaml import ProblemYamlChecker
 from kattistools.checkers.check_subtask_score import CheckScoreMatchesStatement
-from kattistools.checkers.check_shebang import CheckPythonShebang
 from kattistools.checkers.check_template import CheckCPPTemplate
 from kattistools.checkers.check_statement import CheckStatement
 from kattistools.checkers.check_statement_files import CheckStatementFiles
@@ -31,7 +30,6 @@ default_checkers = [
     GeneratorChecker,
     ProblemYamlChecker,
     CheckScoreMatchesStatement,
-    CheckPythonShebang,
     CheckStatement,
     CheckStatementPO,
     CheckSubtaskBox,

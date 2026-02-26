@@ -132,8 +132,9 @@ class CheckSubtaskBox(Checker):
             if not box:
                 continue
 
-            if sum(line.point_value for line in box.subtask_lines) != 100:
-                self.print_error(f"({get_language_code(statement)}) subtask box subtask sum is not 100")
+            subtask_sum = sum(line.point_value for line in box.subtask_lines)
+            if subtask_sum != 100:
+                self.print_error(f"({get_language_code(statement)}) sum of subtasks in subtask box is {subtask_sum}, not 100")
 
             if len(box.subtask_lines) != count_subtasks(path):
                 self.print_error(f"({get_language_code(statement)}) subtask box number of subtasks does not match number of subtasks in secret")

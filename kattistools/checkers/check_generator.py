@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.common import is_generator
+from kattistools.common import get_generator
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 
@@ -9,19 +9,13 @@ class GeneratorChecker(Checker):
         super().__init__("Check generator", path, args)
         self.handle_problem(path)
 
-    def get_generator(self, data_path: Path):
-        for item in data_path.glob('*'):
-            if is_generator(item):
-                return item
-        return None
-
     def handle_problem(self, path):
         data_path = path / 'data'
         if not data_path.exists():
             return
 
         # Find the order of subtask defined in generator (order expected by author)
-        gen = self.get_generator(data_path)
+        gen = get_generator(data_path)
         if gen is None:
             self.print_warning("Couldn't find generator for problem")
             return

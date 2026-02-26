@@ -3,6 +3,7 @@ input should be split across lines
 subtask scores are reasonable (finite, add up etc.)
 (hard) are there undefined variables? basically, some variable got renamed but we forgot to change all occurences.
 exclude dir cmd line option
+warn if testdata size is HUGE
 
 # Low prio
 only check subtask box if the problem has more than one subtask

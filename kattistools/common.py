@@ -19,6 +19,12 @@ def is_generator(file: Path) -> bool:
             return False
     return True
 
+def get_generator(data_path: Path):
+    for item in data_path.glob('*'):
+        if is_generator(item):
+            return item
+    return None
+
 def is_statement(file: Path) -> bool:
     if not file.is_file():
         return False
