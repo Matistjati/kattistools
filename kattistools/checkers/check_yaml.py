@@ -88,12 +88,6 @@ class ProblemYamlChecker(Checker):
         self.check_source_PO(lines, path)
         self.check_rights_owner(problem_yaml)
 
-        # "yes" meaning true is removed in newer yaml versions
-        if self.any_begins_case_insensitive(lines, "show_test_data_groups: yes") or \
-             self.any_begins_case_insensitive(lines, "show_test_data_groups:yes"):
-            self.print_warning_if("show_test_data_groups should be \"true\", not \"yes\"",
-                                  [self.perform_strict_checks])
-
         # Forbid name until the new problem format
         forbidden_keys = ["on_reject", "range", "objective"]
         for key in forbidden_keys:
