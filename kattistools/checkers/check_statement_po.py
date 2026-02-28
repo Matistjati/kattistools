@@ -30,12 +30,28 @@ class CheckStatementPO(Checker):
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Utdata}"):
             self.print_error(r"(sv) missing \section*{Utdata}")
 
-        if not any_begins(lines, "Din lösning kommer att testas på en mängd testfallsgrupper."):
-            self.print_warning("(sv) Missing poängsättning-section")
+        if not any_begins(lines, r"\section*{Poängsättning}"):
+            self.print_warning("Missing poängsättning-section")
+        else:
+            scoring_text = [
+                r"\section*{Poängsättning}",
+                r"Din lösning kommer att testas på en mängd testfallsgrupper.",
+                r"För att få poäng för en grupp så måste du klara alla testfall i gruppen."
+            ]
+            has_scoring_text = False
+            with open(path, "r") as f:
+                statement = [line.replace("\n", "") for line in f.readlines()]
+                has_scoring_text = any(
+                    statement[i] == scoring_text[0] and
+                    statement[i+1] == scoring_text[1] and
+                    statement[i+2] == scoring_text[2]
+                    for i in range(len(statement)-2)
+                )
 
-        box = parse_subtask_box(path)
+            if not has_scoring_text:
+                self.print_warning("(sv) Has Poängsättning-section, but improper scoring text")
 
-        if box:
+        if box := parse_subtask_box(path):
             LAST_SUBTASK_TEXT = "Inga ytterligare begränsningar."
             for line in box.subtask_lines:
                 constraints = line.constraints.strip()
@@ -52,10 +68,25 @@ class CheckStatementPO(Checker):
         
         if not any_begins(lines, r"\section*{Scoring}"):
             self.print_warning(r"(en) Missing \section*{Scoring}")
+        else:
+            scoring_text = [
+                r"\section*{Scoring}",
+                r"Your solution will be tested on a set of test groups, each worth a number of points. Each test group contains",
+                r"a set of test cases. To get the points for a test group you need to solve all test cases in the test group."
+            ]
+            has_scoring_text = False
+            with open(path, "r") as f:
+                statement = [line.replace("\n", "") for line in f.readlines()]
+                has_scoring_text = any(
+                    statement[i] == scoring_text[0] and
+                    statement[i+1] == scoring_text[1] and
+                    statement[i+2] == scoring_text[2]
+                    for i in range(len(statement)-2)
+                )
 
-        if not any_begins(lines, "Your solution will be tested on a set of test groups, each worth a number of points. Each test group contains"):
-            self.print_warning("(en) Missing scoring text")            
-        
+            if not has_scoring_text:
+                self.print_warning("(en) Has Scoring-section, but improper scoring text")
+
         box = parse_subtask_box(path)
 
         if box:
