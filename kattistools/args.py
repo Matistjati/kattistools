@@ -22,7 +22,7 @@ def get_argparser():
 def argparse_to_args(args):
     return Args(path=args.directory, programmeringsolympiden=args.PO, strict=args.strict, finalize=args.finalize, all=args.all)
 
-def parse_only_path_args(path: Path):
+def path_to_args(path: Path):
     return argparse_to_args(get_argparser().parse_args([str(path)]))
 
 def parse_cmdline_args():
