@@ -27,13 +27,13 @@ from kattistools.common import *
 from kattistools.args import Args, parse_cmdline_args
 
 default_checkers = [
+    CheckFiles,
     GeneratorChecker,
     ProblemYamlChecker,
     CheckScoreMatchesStatement,
     CheckStatement,
     CheckStatementPO,
     CheckSubtaskBox,
-    CheckFiles,
     CheckStatementLanguages,
     CheckPragma,
     CheckStatementFiles,

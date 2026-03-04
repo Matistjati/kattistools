@@ -38,14 +38,14 @@ class CheckFiles(Checker):
             self.print_error("Problem has no test data")
 
         if not (data_path / 'secret').exists():
-            self.print_warning("Problem has no secret test data")
+            self.print_warning("'data/secret' does not exist")
 
         if not (data_path / 'sample').exists():
             self.print_warning("Problem has no sample test data")
 
 
     def handle_problem(self, path):
+        self.check_testdata(path)
         self.check_input_validator(path)
         self.check_testdata_root(path)
         self.check_statements(path)
-        self.check_testdata(path)

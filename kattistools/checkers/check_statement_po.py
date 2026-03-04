@@ -71,8 +71,8 @@ class CheckStatementPO(Checker):
         else:
             scoring_text = [
                 r"\section*{Scoring}",
-                r"Your solution will be tested on a set of test groups, each worth a number of points. Each test group contains",
-                r"a set of test cases. To get the points for a test group you need to solve all test cases in the test group."
+                r"Your solution will be tested on a set of test groups.",
+                r"To earn points for a group, you must pass all test cases in that group."
             ]
             has_scoring_text = False
             with open(path, "r") as f:

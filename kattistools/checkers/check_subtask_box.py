@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 
-from kattistools.common import get_statements, get_language_code, count_subtasks
+from kattistools.common import get_statements, get_language_code, count_subtasks, has_secret_data
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 from dataclasses import dataclass
@@ -136,9 +136,6 @@ class CheckSubtaskBox(Checker):
             if subtask_sum != 100:
                 self.print_error(f"({get_language_code(statement)}) sum of subtasks in subtask box is {subtask_sum}, not 100")
 
-            if len(box.subtask_lines) != count_subtasks(path):
-                self.print_error(f"({get_language_code(statement)}) subtask box number of subtasks does not match number of subtasks in secret")
-
             expected_group = 1
 
             for line in box.subtask_lines:
@@ -146,3 +143,7 @@ class CheckSubtaskBox(Checker):
                     self.print_error(f"({get_language_code(statement)}) subtask box has incorrect group ordering: expected {expected_group}, got {line.group_index}")
 
                 expected_group += 1
+
+            if has_secret_data(path):
+                if len(box.subtask_lines) != count_subtasks(path):
+                    self.print_error(f"({get_language_code(statement)}) subtask box number of subtasks does not match number of subtasks in secret")

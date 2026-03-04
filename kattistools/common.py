@@ -61,6 +61,10 @@ def count_subtasks(problem_path: Path):
     secret_path = problem_path / 'data' / 'secret'
     return len([path for path in secret_path.glob('*') if path.is_dir()])
 
+def has_secret_data(problem_path: Path):
+    secret_path = problem_path / 'data' / 'secret'
+    return secret_path.exists()
+
 def get_known_statement_names():
     NAMES_PATH = Path(__file__).parent.parent / "data" / "names.txt"
     with open(NAMES_PATH, 'r') as f:
