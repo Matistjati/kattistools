@@ -5,7 +5,6 @@ from rich.console import Console
 
 from kattistools.checkers.check_subtask_box import parse_subtask_box
 from kattistools.common import get_generator
-from kattistools.args import Args, parse_cmdline_args
 
 def count_unique_testcases(problem_path: Path) -> int:
     testdata_path = problem_path / "data"
@@ -98,13 +97,20 @@ def format_testcase_count(count: int) -> str:
     return f"[{color}]{count}[/{color}]"
 
 if __name__ == "__main__":
+    import argparse
     import rich.box as rich_box
     from rich.table import Table
 
-    console = Console()
-    args: Args = parse_cmdline_args()
+    parser = argparse.ArgumentParser(description='Show problem info')
+    parser.add_argument('directory', type=Path, help='Directory to recursively scan')
+    parser.add_argument('--source', help='Show source column (default: yes)', action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument('--rights-owner', help='Show rights_owner column (default: no)', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--author', help='Show author column (default: no)', action=argparse.BooleanOptionalAction, default=False)
+    args = parser.parse_args()
 
-    directory = Path(args.path)
+    console = Console()
+
+    directory = Path(args.directory)
     if not directory.exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         exit(1)
@@ -122,7 +128,12 @@ if __name__ == "__main__":
     table.add_column("TC", justify="right", no_wrap=True)
     table.add_column("Judging", justify="right", no_wrap=True)
     table.add_column("Scores", justify="right", no_wrap=True)
-    table.add_column("Source", justify="left", no_wrap=True)
+    if args.source:
+        table.add_column("Source", justify="left", no_wrap=True)
+    if args.rights_owner:
+        table.add_column("Rights Owner", justify="left", no_wrap=True)
+    if args.author:
+        table.add_column("Author", justify="left", no_wrap=True)
 
     collisions = []  # list of (problem_name, points, seen) for problems with score collisions
 
@@ -132,6 +143,8 @@ if __name__ == "__main__":
         with open(problem / "problem.yaml", 'r') as f:
             problem_yaml = yaml.safe_load(f) or {}
             source_str = problem_yaml.get('source', 'N/A')
+            rights_owner_str = problem_yaml.get('rights_owner', 'N/A')
+            author_str = problem_yaml.get('author', 'N/A')
 
         if not (problem / "data").exists():
             size_str = "?"
@@ -227,7 +240,14 @@ if __name__ == "__main__":
             if len(seen) < total:
                 collisions.append((name, points, seen))
 
-        table.add_row(name, size_str, tc_str, judging_str, unique_score_str, source_str,
+        row = [name, size_str, tc_str, judging_str, unique_score_str]
+        if args.source:
+            row.append(source_str)
+        if args.rights_owner:
+            row.append(rights_owner_str)
+        if args.author:
+            row.append(author_str)
+        table.add_row(*row,
                       style="on grey7" if table.row_count % 2 else "")
 
 
