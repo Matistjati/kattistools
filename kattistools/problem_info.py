@@ -158,87 +158,87 @@ if __name__ == "__main__":
         subtask_box_langs = ("sv", "en")
 
         # Extract info about subtask inclusions
-        generator = get_generator(problem / "data")
-        with open(generator, 'r') as f:
-            gen_lines = f.readlines()
+        if generator := get_generator(problem / "data"):
+            with open(generator, 'r') as f:
+                gen_lines = f.readlines()
 
-        subtasks = []
-        for line in gen_lines:
-            if line.strip().startswith("group"):
-                subtasks.append(line.strip().split()[1])
+            subtasks = []
+            for line in gen_lines:
+                if line.strip().startswith("group"):
+                    subtasks.append(line.strip().split()[1])
 
-        curr_group = "UNKNOWN"
-        num_subtasks = len(subtasks)
-        included_matrix = [[False] * num_subtasks for _ in range(num_subtasks)]
-        for line in gen_lines:
-            if line.strip().startswith("group"):
-                curr_group = line.strip().split()[1]
-                subtasks.append(curr_group)
-            if line.strip().startswith("include_group"):
-                includes = line.strip().split()[1:]
-                for inc in includes:
-                    if inc not in subtasks:
-                        continue
-                    inc_index = subtasks.index(inc)
-                    curr_index = subtasks.index(curr_group)
-                    included_matrix[curr_index][inc_index] = True
-
-        # transitive closure of inclusion
-        for k in range(num_subtasks):
-            for i in range(num_subtasks):
-                for j in range(num_subtasks):
-                    if included_matrix[i][k] and included_matrix[k][j]:
-                        included_matrix[i][j] = True
-
-        
-        # Judging estimate: worst case = max-weight antichain (own testcases per group).
-        secret_path = problem / "data" / "secret"
-        group_tc_counts = [
-            sum(1 for p in (secret_path / g).glob("*.in") if not p.is_symlink())
-            if (secret_path / g).exists() else 0
-            for g in subtasks[:num_subtasks]
-        ]
-        antichain_tc = max_weight_antichain(included_matrix, group_tc_counts)
-        if antichain_tc > 0:
-            judging_str = format_judging_time(antichain_tc)
-
-        points = []
-        for lang in subtask_box_langs:
-            statement_path = problem / "problem_statement" / f"problem.{lang}.tex"
-            if not statement_path.exists():
-                continue
-            subtask_box = parse_subtask_box(statement_path)
-            if not subtask_box:
-                continue
-            points = [line.point_value for line in subtask_box.subtask_lines]
-
-        if points:
-            if len(points) != num_subtasks:
-                included_matrix = [[False] * len(points) for _ in range(len(points))]
-
-            seen = {}
-            total = 0
-            for mask in range(1, 1 << len(points)):
-                feasible = True
-                for i in range(len(points)):
-                    for j in range(len(points)):
-                        if not (mask & (1 << i)):
+            curr_group = "UNKNOWN"
+            num_subtasks = len(subtasks)
+            included_matrix = [[False] * num_subtasks for _ in range(num_subtasks)]
+            for line in gen_lines:
+                if line.strip().startswith("group"):
+                    curr_group = line.strip().split()[1]
+                    subtasks.append(curr_group)
+                if line.strip().startswith("include_group"):
+                    includes = line.strip().split()[1:]
+                    for inc in includes:
+                        if inc not in subtasks:
                             continue
-                        if mask & (1 << j):
-                            continue
-                        if included_matrix[i][j]:
-                            feasible = False
-                if not feasible:
+                        inc_index = subtasks.index(inc)
+                        curr_index = subtasks.index(curr_group)
+                        included_matrix[curr_index][inc_index] = True
+
+            # transitive closure of inclusion
+            for k in range(num_subtasks):
+                for i in range(num_subtasks):
+                    for j in range(num_subtasks):
+                        if included_matrix[i][k] and included_matrix[k][j]:
+                            included_matrix[i][j] = True
+
+            
+            # Judging estimate: worst case = max-weight antichain (own testcases per group).
+            secret_path = problem / "data" / "secret"
+            group_tc_counts = [
+                sum(1 for p in (secret_path / g).glob("*.in") if not p.is_symlink())
+                if (secret_path / g).exists() else 0
+                for g in subtasks[:num_subtasks]
+            ]
+            antichain_tc = max_weight_antichain(included_matrix, group_tc_counts)
+            if antichain_tc > 0:
+                judging_str = format_judging_time(antichain_tc)
+
+            points = []
+            for lang in subtask_box_langs:
+                statement_path = problem / "problem_statement" / f"problem.{lang}.tex"
+                if not statement_path.exists():
                     continue
-                subset_sum = sum(points[i] for i in range(len(points)) if (mask >> i) & 1)
-                seen.setdefault(subset_sum, []).append(mask)
-                total += 1
+                subtask_box = parse_subtask_box(statement_path)
+                if not subtask_box:
+                    continue
+                points = [line.point_value for line in subtask_box.subtask_lines]
 
-            percent_unique = len(seen) / total * 100 if total else 0
-            color = green_red_gradient(percent_unique, 50, 95, higher_is_better=True)
-            unique_score_str = f"[{color}]{len(seen)}/{total}[/{color}]"
-            if len(seen) < total:
-                collisions.append((name, points, seen))
+            if points:
+                if len(points) != num_subtasks:
+                    included_matrix = [[False] * len(points) for _ in range(len(points))]
+
+                seen = {}
+                total = 0
+                for mask in range(1, 1 << len(points)):
+                    feasible = True
+                    for i in range(len(points)):
+                        for j in range(len(points)):
+                            if not (mask & (1 << i)):
+                                continue
+                            if mask & (1 << j):
+                                continue
+                            if included_matrix[i][j]:
+                                feasible = False
+                    if not feasible:
+                        continue
+                    subset_sum = sum(points[i] for i in range(len(points)) if (mask >> i) & 1)
+                    seen.setdefault(subset_sum, []).append(mask)
+                    total += 1
+
+                percent_unique = len(seen) / total * 100 if total else 0
+                color = green_red_gradient(percent_unique, 50, 95, higher_is_better=True)
+                unique_score_str = f"[{color}]{len(seen)}/{total}[/{color}]"
+                if len(seen) < total:
+                    collisions.append((name, points, seen))
 
         row = [name, size_str, tc_str, judging_str, unique_score_str]
         if args.source:
