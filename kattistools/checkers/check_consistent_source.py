@@ -32,7 +32,7 @@ class ConsistentSourceChecker(Checker):
         for problem in problems:
             with open(problem / 'problem.yaml', 'r') as f:
                 problem_yaml = yaml.safe_load(f) or {}
-                if 'source' in problem_yaml:
+                if 'source' in problem_yaml and problem_yaml['source'] is not None:
                     sources.append(problem_yaml['source'])
         
         similar_pairs = set()
