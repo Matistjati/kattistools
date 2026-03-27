@@ -86,20 +86,23 @@ def parse_subtask_groups(problem: Path):
 
     subtasks = []
     for line in gen_lines:
-        if line.strip().startswith("group"):
-            subtasks.append(line.strip().split()[1])
+        parts = line.strip().split()
+        if parts and parts[0] == "group" and len(parts) >= 2:
+            subtasks.append(parts[1])
 
     n = len(subtasks)
     included_matrix = [[False] * n for _ in range(n)]
 
-    curr_group = "UNKNOWN"
+    curr_group = None
     for line in gen_lines:
-        stripped = line.strip()
-        if stripped.startswith("group"):
-            curr_group = stripped.split()[1]
-        elif stripped.startswith("include_group"):
-            for inc in stripped.split()[1:]:
-                if inc in subtasks[:n]:
+        parts = line.strip().split()
+        if not parts:
+            continue
+        if parts[0] == "group" and len(parts) >= 2:
+            curr_group = parts[1]
+        elif parts[0] == "include_group" and curr_group in subtasks:
+            for inc in parts[1:]:
+                if inc in subtasks:
                     included_matrix[subtasks.index(curr_group)][subtasks.index(inc)] = True
 
     # Transitive closure
