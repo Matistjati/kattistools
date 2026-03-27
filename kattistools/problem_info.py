@@ -146,10 +146,10 @@ if __name__ == "__main__":
             rights_owner_str = problem_yaml.get('rights_owner', 'N/A')
             author_str = problem_yaml.get('author', 'N/A')
 
+        judging_str = "?"
         if not (problem / "data").exists():
             size_str = "?"
             tc_str = "?"
-            judging_str = "?"
         else:
             tc_str = format_testcase_count(count_unique_testcases(problem))
             size_str = format_testcase_size(total_testcase_size(problem))
