@@ -197,6 +197,7 @@ if __name__ == "__main__":
     parser.add_argument('--rights-owner', help='Show rights_owner column (default: no)', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--author', help='Show author column (default: no)', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--english-statement', help='Show whether problem.en.tex exists (default: no)', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--lang', help='Show statement languages column (default: no)', action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
 
     console = Console()
@@ -227,6 +228,8 @@ if __name__ == "__main__":
         table.add_column("Author", justify="left", no_wrap=True)
     if args.english_statement:
         table.add_column("EN", justify="center", no_wrap=True)
+    if args.lang:
+        table.add_column("Languages", justify="left", no_wrap=True)
 
     collisions = []
 
@@ -264,6 +267,14 @@ if __name__ == "__main__":
         if args.english_statement:
             has_en = (problem / "problem_statement" / "problem.en.tex").exists()
             row.append("[green]Yes[/green]" if has_en else "[red]No[/red]")
+        if args.lang:
+            stmt_dir = problem / "problem_statement"
+            langs = sorted(
+                p.stem.split(".")[1]
+                for p in stmt_dir.glob("problem.*.tex")
+                if len(p.stem.split(".")) == 2
+            ) if stmt_dir.exists() else []
+            row.append(", ".join(langs) if langs else "N/A")
         table.add_row(*row, style="on grey7" if table.row_count % 2 else "")
 
     print_collisions(console, collisions)
