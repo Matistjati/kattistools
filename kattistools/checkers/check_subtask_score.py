@@ -16,7 +16,7 @@ class CheckScoreMatchesStatement(Checker):
             with open(f, "r") as file:
                 score_line = list(filter(lambda line: line.startswith("range: "), file.readlines()))
                 if len(score_line)==0:
-                    self.print_error(f"range not given in {f}")
+                    # No need to error: checked in check_data_yaml
                     return
                 score_range = score_line[0].split("range: ")[1]
                 scores.append(int(score_range.split()[1]))
@@ -58,7 +58,7 @@ class CheckScoreMatchesStatement(Checker):
         secret_path = path / 'data' / 'secret'
         secret_scores = self.get_secret_scores(secret_path)
         if not secret_scores or len(secret_scores) == 0:
-            self.print_error("No subtask scores specified in secret")
+            # No need to error: checked in check_data_yaml
             return
 
         if sum(secret_scores) != 100:

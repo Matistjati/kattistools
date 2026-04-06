@@ -70,7 +70,7 @@ class ProblemYamlChecker(Checker):
             desired_rights_owner = 'Programmeringsolympiaden'
             yaml_rights_owner = yaml['rights_owner']
             if desired_rights_owner != yaml_rights_owner and edit_distance(desired_rights_owner, yaml_rights_owner) <= 3:
-                self.errors(f"Likely typo: rights_owner is {yaml_rights_owner}, not {desired_rights_owner}")
+                self.print_error(f"Likely typo: rights_owner is {yaml_rights_owner}, not {desired_rights_owner}")
         else:
             self.print_warning_if("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\"",
                                   [self.is_po_problem])

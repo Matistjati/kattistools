@@ -1,7 +1,30 @@
 from pathlib import Path
 
+EXCLUDED_DIRS = [".git", "testdata_tools"]
+
+
 def is_problem(path: Path):
     return (path / 'problem.yaml').exists()
+
+def gather_problems(path: Path) -> list[Path]:
+    problems = []
+    def _directory_dfs(path: Path):
+        if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
+            return
+
+        if path.is_file():
+            return
+
+        if is_problem(path):
+            problems.append(path)
+            return
+
+        children = path.iterdir()
+        for dir in reversed(sorted(children)):
+            _directory_dfs(dir)
+
+    _directory_dfs(path)
+    return problems
 
 def is_generator(file: Path) -> bool:
     if not file.is_file():
@@ -48,6 +71,12 @@ def is_interactive(path: Path):
         return False
     with open(path / "problem.yaml", "r") as f:
         return "interactive" in f.read()
+
+def is_scoring_problem(path: Path):
+    if not (path / 'problem.yaml').exists():
+        return False
+    with open(path / "problem.yaml", "r") as f:
+        return "scoring" in f.read()
 
 def get_language_code(path):
     parts = path.name.split('.')

@@ -14,6 +14,8 @@ Priorities:
 - Don't add any metadata to problem packages. The only way that problem packages should change from
 using this tool is that they are of higher quality.
 - Checks should be cheap and run fast. It currently takes 5 seconds to check all 400 problems in my problems folder
+- Be extremely opinionated. Don't be afraid to add checks that will create warnings for tons of legacy problems.
+- Only check what can efficiently be checked using classical code. Try to check the rest using LLMs (see the repo kattis-skills in Kodsport).
 
 ## Example usage
 

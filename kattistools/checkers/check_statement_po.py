@@ -12,10 +12,6 @@ def any_has(lines, needle):
 def any_begins(lines, needle):
     return any(line.startswith(needle) for line in lines)
 
-def read_file(path):
-    with open(path, "r") as f:
-        return f.readlines()
-
 
 class CheckStatementPO(Checker):
     def __init__(self, path: Path, args: Args):
@@ -24,7 +20,7 @@ class CheckStatementPO(Checker):
 
 
     def handle_swedish(self, path):
-        lines = set(read_file(path))
+        lines = set(path.read_text().splitlines())
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Indata}"):
             self.print_error(r"(sv) missing \section*{Indata}")
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Utdata}"):
@@ -60,7 +56,7 @@ class CheckStatementPO(Checker):
 
 
     def handle_english(self, path):
-        lines = set(read_file(path))
+        lines = set(path.read_text().splitlines())
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Input}"):
             self.print_error(r"(en) missing \section*{Input}")
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Output}"):

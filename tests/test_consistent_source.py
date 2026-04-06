@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.check_problem import directory_dfs
+from kattistools.check_problem import run_checkers
 import kattistools.checkers.check_consistent_source as check_consistent_source
 from kattistools.args import path_to_args
 
@@ -11,10 +11,10 @@ def test_consistent_source_checker():
         for _, value in e.items():
             errors += value
     good_contest_path = Path(__file__).parent / 'problems' / 'sample_contest_ok_source'
-    directory_dfs(path_to_args(good_contest_path), [], [check_consistent_source.ConsistentSourceChecker], collect_error)
+    run_checkers(path_to_args(good_contest_path), [], [check_consistent_source.ConsistentSourceChecker], collect_error)
     assert not any(check_consistent_source.CONSISTENT_SOURCE_CHECKER_NAME in error for error in errors), "Gave false positive for mixing sources"
 
     errors = []
     bad_contest_path = Path(__file__).parent / 'problems' / 'sample_contest_bad_source'
-    directory_dfs(path_to_args(bad_contest_path), [], [check_consistent_source.ConsistentSourceChecker], collect_error)
+    run_checkers(path_to_args(bad_contest_path), [], [check_consistent_source.ConsistentSourceChecker], collect_error)
     assert any(check_consistent_source.CONSISTENT_SOURCE_CHECKER_NAME in error for error in errors), "Did not give error when mixing sources"

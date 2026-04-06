@@ -55,6 +55,8 @@ class CheckPragma(Checker):
                     if content.count('\"') > 2:
                         self.print_error(f"File '{submission_name}': Keep all targets in a single comment like this: #pragma GCC target(\"avx2,aes\")")
                         continue
+                    if '("' not in content:
+                        continue
                     pragmas = content.split('(\"')[1]
                     pragmas = pragmas.split('\")')[0]
                     pragmas = pragmas.split(',')

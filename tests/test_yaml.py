@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.check_problem import directory_dfs
+from kattistools.check_problem import run_checkers
 import kattistools.checkers.check_yaml as check_yaml
 #from kattistools.args import parse_only_path_args
 

@@ -41,10 +41,15 @@ class CheckStatement(Checker):
                     if line.startswith(r"\texttt{", i):
                         i += len(r"\texttt{")
                         texttt_level += 1
+                        continue
                     elif line[i] == '{':
-                        texttt_level += 1
+                        if texttt_level > 0:
+                            texttt_level += 1
                     elif line[i] == '}':
-                        texttt_level -= 1
+                        if texttt_level > 0:
+                            texttt_level -= 1
+                            i += 1
+                            continue
 
                     if texttt_level == 0:
                         tokens.append(line[i])
@@ -170,8 +175,11 @@ class CheckStatement(Checker):
 
     def is_capitalized(self, letter, prefer_true):
         uppercase = string.ascii_uppercase + "ÅÄÖ"
+        lowercase = string.ascii_lowercase + "åäö"
         if letter in uppercase:
             return True
+        if letter in lowercase:
+            return False
         return True if prefer_true else False
 
     def handle_swedish(self, statement_path):

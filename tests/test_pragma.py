@@ -19,8 +19,7 @@ def test_pragma_checker():
                  'splitpragma.cpp']
     BAD_FILES = [f'wrong_answer/{file}' for file in BAD_FILES]
 
-    GOOD_FILES = ['manypragma.cpp', 'mitigate_pragma_allocator.cpp', 'accepted/ok2.cpp', 'wrong_answer/ok.cpp']
-    GOOD_FILES = [f'accepted/{file}' for file in GOOD_FILES]
+    GOOD_FILES = ['accepted/manypragma.cpp', 'accepted/mitigate_pragma_allocator.cpp', 'accepted/ok2.cpp', 'wrong_answer/ok.cpp']
 
     for BAD_FILE in BAD_FILES:
         assert BAD_FILE in errors, f'Did not give error for file {BAD_FILE}'

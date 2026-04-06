@@ -1,11 +1,9 @@
 from pathlib import Path
-import argparse
 import sys
 import re
 
 from rich.console import Console
 
-EXCLUDED_DIRS = [".git", "testdata_tools"]
 BLUE="#52b2f7"
 
 from kattistools.checkers.checker import Checker
@@ -21,12 +19,16 @@ from kattistools.checkers.check_files import CheckFiles
 from kattistools.checkers.check_has_languages import CheckStatementLanguages
 from kattistools.checkers.check_pragma import CheckPragma
 from kattistools.checkers.check_ioi_scoring import IOIScoringChecker
+from kattistools.checkers.check_input_validator import CheckInputValidator
+from kattistools.checkers.check_data_yaml import CheckDataYAML
 from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
 from kattistools.checkers.check_unique_uuid import UniqueUUIDChecker
+from kattistools.checkers.check_testdata_tools import TestdataToolsChecker
 from kattistools.common import *
 from kattistools.args import Args, parse_cmdline_args
 
-default_checkers = [
+# Run once per problem
+per_problem_checkers = [
     CheckFiles,
     GeneratorChecker,
     ProblemYamlChecker,
@@ -39,11 +41,20 @@ default_checkers = [
     CheckStatementFiles,
     IOIScoringChecker,
     CheckCPPTemplate,
+    CheckInputValidator,
+    CheckDataYAML
 ]
 
+# The parent directory of a problem is a contest, and these checkers are run once per contest
 contest_checkers = [
     ConsistentSourceChecker,
     UniqueUUIDChecker
+]
+
+# From every problem, traverse upwards until we find a folder with .git. Run these checkers here
+repo_checkers = [
+    UniqueUUIDChecker,
+    TestdataToolsChecker
 ]
 
 def find_rightmost_year(path: Path) -> int | None:
@@ -80,41 +91,53 @@ def aggregate_skips(path: Path, skips):
             all_skips[skip_reason] = 0
         all_skips[skip_reason] += amount
 
-# Each checker is involved in the root of each problem exactly once
-def directory_dfs(args: Args, problem_checkers, contest_checkers, error_callback, skip_callback=None):
-    def _directory_dfs(path: Path):
-        if any(path.name.endswith(exclude) for exclude in EXCLUDED_DIRS):
-            return
+def directory_dfs(args: Args, per_problem_checkers, contest_checkers, error_callback, skip_callback=None):
+    return run_checkers(args, per_problem_checkers, contest_checkers, error_callback, skip_callback)
 
-        if path.is_file():
-            return
+def run_checkers(args: Args, per_problem_checkers, contest_checkers, error_callback, skip_callback=None):
+    problems = gather_problems(args.path)
 
-        def run_checkers(checkers):
-            errors = {}
-            for check in checkers:
-                checker = check(path, args)
-                for error_name, error_list in checker.errors.items():
-                    error_list = [f"{i} ({checker.name})" for i in error_list]
-                    if error_name not in errors:
-                        errors[error_name] = []
-                    errors[error_name] += error_list
-                if checker.skips and skip_callback:
-                    skip_callback(path, checker.skips)
+    def deduplicate(items):
+        # Since python 3.7, dicts preserve insertion order
+        return list(dict.fromkeys(items))
+    assert problems == deduplicate(problems)
+    contests = deduplicate(problem.parent for problem in problems)
+    repos = []
+    for problem in problems:
+        path = problem.resolve()
+        while path != path.parent:
+            if (path / ".git").exists():
+                repos.append(path)
+                break
+            path = path.parent
+    repos = deduplicate(repos)
 
-            if errors:
-                error_callback(path, errors)
-            
-        if is_problem(path):
-            run_checkers(problem_checkers)
-            return
-        else:
-            run_checkers(contest_checkers)
+    seen = []
+    def _run_checkers(checkers, dir):
+        errors = {}
+        for check in checkers:
+            if (check, dir) in seen:
+                continue
+            seen.append((check, dir))
 
-        children = path.iterdir()
-        for dir in reversed(sorted(children)):
-            _directory_dfs(dir)
+            checker = check(dir, args)
+            for error_name, error_list in checker.errors.items():
+                error_list = [f"{i} ({checker.name})" for i in error_list]
+                if error_name not in errors:
+                    errors[error_name] = []
+                errors[error_name] += error_list
+            if checker.skips and skip_callback:
+                skip_callback(dir, checker.skips)
 
-    _directory_dfs(args.path)
+        if errors:
+            error_callback(dir, errors)
+    
+    for problem in problems:
+        _run_checkers(per_problem_checkers, problem)
+    for contest in contests:
+        _run_checkers(contest_checkers, contest)
+    for repo in repos:
+        _run_checkers(repo_checkers, repo)
 
 if __name__ == "__main__":
     args = parse_cmdline_args()
@@ -124,7 +147,9 @@ if __name__ == "__main__":
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(1)
 
-    directory_dfs(args, default_checkers, contest_checkers, print_errors, aggregate_skips)
+
+
+    run_checkers(args, per_problem_checkers, contest_checkers, print_errors, aggregate_skips)
 
     if all_skips:
         console.print(f"[{BLUE}]Info[/{BLUE}]: suppressed errors/warnings because following modes were not set")

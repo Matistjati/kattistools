@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.check_problem import directory_dfs
+from kattistools.check_problem import run_checkers
 import kattistools.checkers.check_statement_po as check_statement_po
 import kattistools.checkers.check_subtask_box as check_subtask_box
 from kattistools.args import get_argparser, argparse_to_args
@@ -15,7 +15,7 @@ def test_pragma_checker():
 
         parser = get_argparser()
         args = argparse_to_args(parser.parse_args([str(path), "--PO"]))
-        directory_dfs(args, [checker], [], collect_error)
+        run_checkers(args, [checker], [], collect_error)
         return errors
     bad_root = Path(__file__).parent / 'problems' / 'subtask_boxes' / 'bad'
     
