@@ -43,9 +43,16 @@ class CheckFiles(Checker):
         if not (data_path / 'sample').exists():
             self.print_warning("Problem has no sample test data")
 
+    def check_timelim(self, path):
+        unused_files = ['timelimit', 'memorylimit']
+        for dot in ['', '.']:
+            for file in unused_files:
+                if (path / f"{dot}{file}").exists():
+                    self.print_warning(f"Problem has {dot}{file} file, which does nothing")
 
     def handle_problem(self, path):
         self.check_testdata(path)
         self.check_input_validator(path)
         self.check_testdata_root(path)
         self.check_statements(path)
+        self.check_timelim(path)
