@@ -91,9 +91,6 @@ def aggregate_skips(path: Path, skips):
             all_skips[skip_reason] = 0
         all_skips[skip_reason] += amount
 
-def directory_dfs(args: Args, per_problem_checkers, contest_checkers, error_callback, skip_callback=None):
-    return run_checkers(args, per_problem_checkers, contest_checkers, error_callback, skip_callback)
-
 def run_checkers(args: Args, per_problem_checkers, contest_checkers, error_callback, skip_callback=None):
     problems = gather_problems(args.path)
 
@@ -146,8 +143,6 @@ if __name__ == "__main__":
     if not Path(directory).exists():
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(1)
-
-
 
     run_checkers(args, per_problem_checkers, contest_checkers, print_errors, aggregate_skips)
 
