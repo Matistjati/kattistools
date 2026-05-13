@@ -34,4 +34,7 @@ class TestdataToolsChecker(Checker):
 
             sha256_hash = hashlib.sha256(gen_location.read_bytes()).hexdigest()
             if sha256_hash != gen_sh_hash:
-                self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' has an outdated generator. Pull the latest version")
+                self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' has an outdated generator. Pull the latest version from 'git@github.com:Kodsport/testdata_tools.git'")
+
+            if (testdata_tools / '.git').exists():
+                self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' is a git repo. Delete its .git folder")
