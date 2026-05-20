@@ -5,7 +5,7 @@ import kattistools.checkers.check_statement_po as check_statement_po
 import kattistools.checkers.check_subtask_box as check_subtask_box
 from kattistools.args import get_argparser, argparse_to_args
 
-def test_pragma_checker():
+def test_subtask_boxes():
     def check(path, checker):
         errors = []
         def collect_error(path, e):

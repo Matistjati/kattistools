@@ -124,7 +124,7 @@ class CheckSubtaskBox(Checker):
     def handle_problem(self, path: Path):
         self.add_message_condition(self.is_po_problem)
 
-        if count_subtasks(path) <= 1:
+        if count_subtasks(path) == 1:
             return
 
         statement_path = path / 'problem_statement'
