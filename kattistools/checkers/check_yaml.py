@@ -133,3 +133,6 @@ class ProblemYamlChecker(Checker):
         if not is_scoring:
             self.print_error_if("problem.yaml must have 'type: scoring'",
                              [self.is_po_problem])
+
+        if 'validation' in problem_yaml and 'default' in problem_yaml['validation'].split():
+            self.print_warning("problem.yaml contains 'validation: default', which does nothing. Remove.")

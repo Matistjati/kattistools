@@ -22,7 +22,15 @@ class GeneratorChecker(Checker):
         
         generator_text = gen.read_text()
         if "sample_manual" in generator_text:
-            if not (path / 'output_validators').exists():
+            custom_validation = (path / 'output_validators').exists()
+
+            with open(path / "problem.yaml", "r") as f:
+                config = f.read()
+                custom_validation |= ('float_tolerance' in config or
+                    'float_absolute_tolerance' in config or
+                    'float_relative_tolerance' in config)
+
+            if not custom_validation:
                 self.print_warning("Avoid using 'sample_manual' if there is no output validator")
 
         # Check: there should be no REQUIRE_SAMPLE_REUSE

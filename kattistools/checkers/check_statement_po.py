@@ -19,13 +19,15 @@ class CheckStatementPO(Checker):
 
 
     def handle_swedish(self, path):
+
         lines = set(path.read_text().splitlines())
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Indata}"):
             self.print_error(r"(sv) missing \section*{Indata}")
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Utdata}"):
             self.print_error(r"(sv) missing \section*{Utdata}")
 
-        if count_subtasks(self.path) > 1:
+        # If no data, we don't know: assume no data generated, and check
+        if count_subtasks(self.path) > 1 or count_subtasks(self.path) == 0:
             if not any_begins(lines, r"\section*{Poängsättning}"):
                 self.print_warning("(sv) missing poängsättning-section")
             else:
@@ -47,7 +49,7 @@ class CheckStatementPO(Checker):
                 if not has_scoring_text:
                     self.print_warning("(sv) Has Poängsättning-section, but improper scoring text")
 
-            if box := parse_subtask_box(path):
+            if box := parse_subtask_box(path, self):
                 LAST_SUBTASK_TEXT = "Inga ytterligare begränsningar."
                 for line in box.subtask_lines:
                     constraints = line.constraints.strip()
@@ -62,7 +64,8 @@ class CheckStatementPO(Checker):
         if not self.is_interactive_problem() and not any_begins(lines, r"\section*{Output}"):
             self.print_error(r"(en) missing \section*{Output}")
         
-        if count_subtasks(self.path) > 1:
+        # If no data, we don't know: assume no data generated, and check
+        if count_subtasks(self.path) > 1 or count_subtasks(self.path) == 0:
             if not any_begins(lines, r"\section*{Scoring}"):
                 self.print_warning(r"(en) Missing \section*{Scoring}")
             else:
@@ -84,7 +87,7 @@ class CheckStatementPO(Checker):
                 if not has_scoring_text:
                     self.print_warning("(en) Has Scoring-section, but improper scoring text")
 
-            if box := parse_subtask_box(path):
+            if box := parse_subtask_box(path, self):
                 LAST_SUBTASK_TEXT = "No additional constraints."
                 for line in box.subtask_lines:
                     constraints = line.constraints.strip()

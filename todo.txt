@@ -1,7 +1,3 @@
 # Medium prio
-subtask scores are reasonable (finite, add up etc.)
-(hard) are there undefined variables? basically, some variable got renamed but we forgot to change all occurences.
+subtask scores are reasonable (finite, add up etc.). testdata.yamls
 exclude dir cmd line option
-
-# Low prio
-only check subtask box if the problem has more than one subtask

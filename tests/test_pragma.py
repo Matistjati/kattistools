@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.check_problem import directory_dfs
+from kattistools.check_problem import run_checkers
 import kattistools.checkers.check_pragma as check_pragma
 from kattistools.args import get_argparser, argparse_to_args
 
@@ -13,7 +13,7 @@ def test_pragma_checker():
     problem_path = Path(__file__).parent / 'problems' / 'pragma'
     parser = get_argparser()
     args = parser.parse_args([str(problem_path), "--strict"])
-    directory_dfs(argparse_to_args(args), [check_pragma.CheckPragma], [], collect_error)
+    run_checkers(argparse_to_args(args), [check_pragma.CheckPragma], [], collect_error)
     errors = ''.join(errors)
     BAD_FILES = ['unmitigated.cpp', 'optimization.cpp', 'multistring_target.cpp',
                  'splitpragma.cpp']

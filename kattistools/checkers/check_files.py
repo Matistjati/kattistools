@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from kattistools.common import get_statements
@@ -50,9 +51,24 @@ class CheckFiles(Checker):
                 if (path / f"{dot}{file}").exists():
                     self.print_warning(f"Problem has {dot}{file} file, which does nothing")
 
+    def check_no_binaries(self, path):
+        for file in path.rglob('*'):
+            if not file.is_file():
+                continue
+
+            if os.access(file, os.X_OK):
+                try:
+                    with open(file, 'rb') as f:
+                        chunk = f.read(1024)
+                        if b'\0' in chunk:
+                            self.print_warning(f"Executable binary file found: {file.relative_to(path)}")
+                except:
+                    pass
+
     def handle_problem(self, path):
         self.check_testdata(path)
         self.check_input_validator(path)
         self.check_testdata_root(path)
         self.check_statements(path)
         self.check_timelim(path)
+        self.check_no_binaries(path)
