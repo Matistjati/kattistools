@@ -51,17 +51,22 @@ class CheckFiles(Checker):
                 if (path / f"{dot}{file}").exists():
                     self.print_warning(f"Problem has {dot}{file} file, which does nothing")
 
+    binary_extensions = {
+        '.exe', '.dll', '.so', '.dylib', '.o', '.obj', '.a', '.lib',
+        '.class', '.jar', '.pyc', '.pyo', '.out', '.pdb', '.ilk',
+    }
+
     def check_no_binaries(self, path):
         for file in path.rglob('*'):
             if not file.is_file():
                 continue
 
-            if os.access(file, os.X_OK):
+            if os.access(file, os.X_OK) or file.suffix.lower() in self.binary_extensions:
                 try:
                     with open(file, 'rb') as f:
                         chunk = f.read(1024)
                         if b'\0' in chunk:
-                            self.print_warning(f"Executable binary file found: {file.relative_to(path)}")
+                            self.print_warning(f"Stray binary file: '{file.relative_to(path)}'")
                 except:
                     pass
 
