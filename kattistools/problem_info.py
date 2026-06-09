@@ -257,7 +257,7 @@ def print_collisions(console: Console, problems: list[ProblemInfo], max_shown: i
             continue
         console.print(f"\n[bold underline]Score collisions: {info.name}[/bold underline]")
         bad_scores = [(score, masks) for score, masks in info.score.seen.items() if len(masks) > 1]
-        for score, masks in reversed(sorted(bad_scores, key=lambda x: len(x[1])))[:max_shown]:
+        for score, masks in list(reversed(sorted(bad_scores, key=lambda x: len(x[1]))))[:max_shown]:
             console.print(f"  Sum [bold]{score}[/bold] can be achieved in {len(masks)} ways:")
             for mask in masks:
                 included = [info.score.points[i] for i in range(len(info.score.points)) if (mask >> i) & 1]
