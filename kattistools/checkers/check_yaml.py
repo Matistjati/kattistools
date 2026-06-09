@@ -122,12 +122,21 @@ class ProblemYamlChecker(Checker):
         if is_scoring:
             has_test_data_groups = False
             if 'grading' in problem_yaml:
-                if 'show_test_data_groups' in problem_yaml['grading']:
-                    if problem_yaml['grading']['show_test_data_groups'] == True:
-                        has_test_data_groups = True
+                for key in problem_yaml['grading']:
+                    if key == 'show_test_data_groups':
+                        if problem_yaml['grading'][key] == True:
+                            has_test_data_groups = True
+                    elif key == 'objective':
+                        objective = problem_yaml['grading'][key]
+                        if objective == 'max':
+                            self.print_warning("Do not specify 'grading: objective: max' in problem.yaml; it is the default")
+                        elif objective == 'min':
+                            self.print_error("Never use minimization problems; Kattis does not support minimization")
+                    else:
+                        self.print_error(f"Unknown key '{key}' under grading in problem.yaml")
 
             if not has_test_data_groups:
-                self.print_error("Missing grading: 'show_test_data_groups: true' in problem.yaml")
+                self.print_error("Missing 'grading: show_test_data_groups: true' in problem.yaml")
 
 
         if not is_scoring:

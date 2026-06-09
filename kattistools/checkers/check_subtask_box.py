@@ -9,16 +9,13 @@ from dataclasses import dataclass
 @dataclass
 class SubtaskLine:
     group_index: int
-    point_value: int
+    point_value: float
     constraints: str
 
 @dataclass
 class SubtaskBox:
     language: str
     subtask_lines: list[SubtaskLine]
-
-def any_has(lines, needle):
-    return any(needle in line for line in lines)
 
 def parse_subtask_box(statement_path: Path, checker: Checker | None = None) -> SubtaskBox | None:
     if get_language_code(statement_path) not in ('sv', 'en'):
@@ -28,20 +25,22 @@ def parse_subtask_box(statement_path: Path, checker: Checker | None = None) -> S
         lines = f.readlines()
 
     lang = get_language_code(statement_path)
+    # Accept any column width (p{Ncm}) and flexible whitespace, rather than a
+    # single hard-coded literal, since statements legitimately use different widths.
     HEADER_LINES = {
-        "sv": r"\textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline",
-        "en": r"\textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"
+        "sv": re.compile(r"\\textbf\{Grupp\}\s*&\s*\\textbf\{Poäng\}\s*&\s*\\textbf\{Gränser\}\s*\\\\\s*\\hline"),
+        "en": re.compile(r"\\textbf\{(?:Group|Subtask)\}\s*&\s*\\textbf\{Points\}\s*&\s*\\textbf\{Constraints\}\s*\\\\\s*\\hline"),
     }
-    HEADER_FORMAT = r"\begin{tabular}{| l | l | p{12cm} |}"
+    HEADER_FORMAT = re.compile(r"\\begin\{tabular\}\{\|\s*l\s*\|\s*l\s*\|\s*p\{[\d.]+cm\}\s*\|\}")
     SUBTASK_BOX_END = r"\end{tabular}"
-    header_line = HEADER_LINES[lang]
+    header_re = HEADER_LINES[lang]
 
-    if not any_has(lines, header_line) or not any_has(lines, HEADER_FORMAT):
+    if not any(header_re.search(line) for line in lines) or not any(HEADER_FORMAT.search(line) for line in lines):
         if checker:
             checker.print_warning(f"({lang}) missing modern subtask box in {statement_path.name}")
         return None
 
-    start = [i for i in range(len(lines)) if header_line in lines[i]]
+    start = [i for i in range(len(lines)) if header_re.search(lines[i])]
     if len(start) > 1:
         if checker:
             checker.print_warning(f"({lang}) More than one subtask box")
@@ -80,12 +79,12 @@ def parse_subtask_box(statement_path: Path, checker: Checker | None = None) -> S
         # $1$    & $15$  & $Q \le 10^3, N \le 10^4$ \\ \hline
         # $7$ & $38$ & Inga ytterligare begränsningar. \\ \hline % N <= 2^19 ≈ 5*10^5 eller 2^18 ≈
         pattern = re.compile(
-            r'\s*\$(\d+)\$\s*&\s*\$(\d+)\$\s*&\s*(.*?)\s*\\\\\s*\\hline(?:\s*%.*)?$'
+            r'\s*\$(\d+)\$\s*&\s*\$(\d+(?:\.\d+)?)\$\s*&\s*(.*?)\s*\\\\\s*\\hline(?:\s*%.*)?$'
         )
 
         match = pattern.fullmatch(line.strip())
         if match:
-            subtask_lines_parsed.append(SubtaskLine(int(match.group(1)), int(match.group(2)), match.group(3)))
+            subtask_lines_parsed.append(SubtaskLine(int(match.group(1)), float(match.group(2)), match.group(3)))
         else:
             if checker:
                 checker.print_warning(f"({lang}) Malformed line in subtask box: \"{line.strip()}\"")
@@ -137,7 +136,7 @@ class CheckSubtaskBox(Checker):
                 continue
 
             subtask_sum = sum(line.point_value for line in box.subtask_lines)
-            if subtask_sum != 100:
+            if abs(subtask_sum - 100) > 0.01:
                 self.print_error(f"({get_language_code(statement)}) sum of subtasks in subtask box is {subtask_sum}, not 100")
 
             expected_group = 1

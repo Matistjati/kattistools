@@ -19,7 +19,7 @@ class CheckScoreMatchesStatement(Checker):
                     # No need to error: checked in check_data_yaml
                     return
                 score_range = score_line[0].split("range: ")[1]
-                scores.append(int(score_range.split()[1]))
+                scores.append(float(score_range.split()[1]))
         return scores
 
     def get_statement_scores(self, statement_path: Path):
@@ -61,7 +61,7 @@ class CheckScoreMatchesStatement(Checker):
             # No need to error: checked in check_data_yaml
             return
 
-        if sum(secret_scores) != 100:
+        if abs(sum(secret_scores) - 100) > 0.01:
             self.print_warning(f"secret: total score is {sum(secret_scores)}, not 100")
 
         # We only have scoring text if we have subtasks

@@ -28,10 +28,10 @@ class CheckFiles(Checker):
             return
 
         if self.is_po_problem() and not (statement_path / "problem.sv.tex").exists():
-            self.print_warning("problem.sv.tex is missing")
+            self.print_warning("'problem.sv.tex' is missing")
 
         if not (statement_path / "problem.en.tex").exists():
-            self.print_warning("problem.en.tex is missing")
+            self.print_warning("'problem.en.tex' is missing")
 
     def check_testdata(self, path):
         data_path = path / 'data'
@@ -70,6 +70,21 @@ class CheckFiles(Checker):
                 except:
                     pass
 
+    # TODO: only complain about this if it's not in the gitignore
+    # also disallow score.txt
+    disallowed_extensions = { # don't push perf stuff
+        '.data', '.old'
+    }
+
+    def check_disallowed(self, path):
+        for ext in self.disallowed_extensions:
+            for file in path.rglob(f'*{ext}'):
+                if not file.is_file():
+                    continue
+
+                self.print_warning(f"Stray temporary file: '{file.relative_to(path)}'")
+
+
     def handle_problem(self, path):
         self.check_testdata(path)
         self.check_input_validator(path)
@@ -77,3 +92,4 @@ class CheckFiles(Checker):
         self.check_statements(path)
         self.check_timelim(path)
         self.check_no_binaries(path)
+        self.check_disallowed(path)

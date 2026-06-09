@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from rich.console import Console
 
 from kattistools.checkers.check_subtask_box import parse_subtask_box
-from kattistools.common import get_generator
+from kattistools.common import get_generator, gather_problems
 
 
 @dataclass
@@ -47,17 +47,6 @@ def total_testcase_size(problem_path: Path) -> int:
     if not testdata_path.exists():
         return -1
     return sum(p.stat().st_size for p in testdata_path.rglob("*.in") if not p.is_symlink())
-
-
-def get_problems(directory: Path):
-    if directory.name == 'testdata_tools':
-        return
-    if (directory / 'problem.yaml').exists():
-        yield directory
-        return
-    for item in directory.glob('*'):
-        if item.is_dir():
-            yield from get_problems(item)
 
 
 def lerp(a: int, b: int, t: float) -> int:
@@ -107,16 +96,24 @@ def parse_subtask_groups(problem: Path):
     """Parse generator file to extract subtask names and inclusion matrix."""
     generator = get_generator(problem / "data")
     if not generator:
-        return None, None
+        return None, None, None
 
     with open(generator, 'r') as f:
         gen_lines = f.readlines()
 
     subtasks = []
+    group_points = []
     for line in gen_lines:
         parts = line.strip().split()
         if parts and parts[0] == "group" and len(parts) >= 2:
             subtasks.append(parts[1])
+            # Generators encode points as `group <name> <points>`. Keep them as a
+            # fallback source for the score column; only trust the list if every
+            # group has a numeric points token.
+            if group_points is not None and len(parts) >= 3 and parts[2].isdigit():
+                group_points.append(int(parts[2]))
+            else:
+                group_points = None
 
     n = len(subtasks)
     included_matrix = [[False] * n for _ in range(n)]
@@ -140,7 +137,7 @@ def parse_subtask_groups(problem: Path):
                 if included_matrix[i][k] and included_matrix[k][j]:
                     included_matrix[i][j] = True
 
-    return subtasks[:n], included_matrix
+    return subtasks[:n], included_matrix, group_points
 
 
 def compute_judging_estimate(problem: Path, subtasks: list[str], included_matrix: list[list[bool]]) -> str:
@@ -158,7 +155,10 @@ def compute_judging_estimate(problem: Path, subtasks: list[str], included_matrix
 
 
 
-def compute_score_uniqueness(problem: Path, subtasks: list[str], included_matrix: list[list[bool]]) -> ScoreResult:
+# If there are more than 18 subtasks, this becomes prohibitively slow
+MAX_SUBTASKS_FOR_UNIQUENESS = 18
+
+def compute_score_uniqueness(problem: Path, subtasks: list[str], included_matrix: list[list[bool]], group_points: list[int] | None = None) -> ScoreResult:
     num_subtasks = len(subtasks)
     points = []
     for lang in ("sv", "en"):
@@ -170,8 +170,16 @@ def compute_score_uniqueness(problem: Path, subtasks: list[str], included_matrix
             continue
         points = [line.point_value for line in subtask_box.subtask_lines]
 
+    # Fall back to the points encoded in the generator (`group <name> <points>`)
+    # when the statement has no parseable subtask box.
+    if not points and group_points:
+        points = group_points
+
     if not points:
         return ScoreResult()
+
+    if len(points) > MAX_SUBTASKS_FOR_UNIQUENESS:
+        return ScoreResult(display=f"skip({len(points)})")
 
     if len(points) != num_subtasks:
         included_matrix = [[False] * len(points) for _ in range(len(points))]
@@ -212,10 +220,10 @@ def collect_problem_info(problem: Path) -> ProblemInfo:
         distinct_tc = None
         total_tc = None
 
-    subtasks, included_matrix = parse_subtask_groups(problem)
+    subtasks, included_matrix, group_points = parse_subtask_groups(problem)
     if subtasks is not None:
         judging = compute_judging_estimate(problem, subtasks, included_matrix)
-        score = compute_score_uniqueness(problem, subtasks, included_matrix)
+        score = compute_score_uniqueness(problem, subtasks, included_matrix, group_points)
     else:
         judging = "?"
         score = ScoreResult()
@@ -249,7 +257,7 @@ def print_collisions(console: Console, problems: list[ProblemInfo], max_shown: i
             continue
         console.print(f"\n[bold underline]Score collisions: {info.name}[/bold underline]")
         bad_scores = [(score, masks) for score, masks in info.score.seen.items() if len(masks) > 1]
-        for score, masks in bad_scores[:max_shown]:
+        for score, masks in reversed(sorted(bad_scores, key=lambda x: len(x[1])))[:max_shown]:
             console.print(f"  Sum [bold]{score}[/bold] can be achieved in {len(masks)} ways:")
             for mask in masks:
                 included = [info.score.points[i] for i in range(len(info.score.points)) if (mask >> i) & 1]
@@ -309,7 +317,7 @@ if __name__ == "__main__":
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         exit(1)
 
-    problems = [collect_problem_info(p) for p in get_problems(directory)]
+    problems = [collect_problem_info(p) for p in gather_problems(directory)]
 
     table = Table(
         box=rich_box.ROUNDED,

@@ -1,10 +1,18 @@
 from pathlib import Path
+import yaml
 
 EXCLUDED_DIRS = [".git", "testdata_tools"]
 
 
 def is_problem(path: Path):
-    return (path / 'problem.yaml').exists()
+    if not (path / 'problem.yaml').exists():
+        return False
+    # Avoid CSES false positives
+    with open(path / "problem.yaml", "r") as f:
+        yaml_data = yaml.safe_load(f)
+        if yaml_data and 'problem_format_version' in yaml_data and 'cses' in yaml_data['problem_format_version']:
+            return False
+    return True
 
 def gather_problems(path: Path) -> list[Path]:
     problems = []
