@@ -28,7 +28,7 @@ class CheckInputValidator(Checker):
 
         sha256_hash = hashlib.sha256(validator_h.read_bytes()).hexdigest()
         data_root = Path(__file__).parent.parent.parent / "data"
-        expected_validator_hash = (data_root / "validator_hash.txt").read_text()
+        expected_validator_hash = (data_root / "input_validator_hash.txt").read_text()
         if sha256_hash != expected_validator_hash:
             self.print_warning(f"Outdated 'validator.h' in input validator. Get the newest from 'testdata_tools'")
 

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import hashlib
 
 from kattistools.common import get_statements
 from kattistools.checkers.checker import Checker
@@ -16,6 +17,31 @@ class CheckFiles(Checker):
                 self.print_error("input_format_validators is renamed to input_validators")
             else:
                 self.print_error('Problem has no input validator')
+
+    def check_output_validator(self, path: Path):
+        if not (path / 'output_validators').exists():
+            return
+        
+        path = path / 'output_validators'
+        subdirs = [node for node in path.glob('*') if node.is_dir()]
+        if len(subdirs) == 0:
+            self.print_error("output_validators has no subfolder: prefer C++ output validators using the validate.h header")
+            return
+        if len(subdirs) > 1:
+            self.print_error("Multiple output validators are not supported")
+            return
+        validator_dir = subdirs[0]
+
+        validate_h = [h for h in validator_dir.glob('*.h') if h.name=="validate.h"]
+        if len(validate_h) == 0:
+            self.print_error("Output validator does not use validate.h")
+        
+        sha256_hash = hashlib.sha256(validate_h[0].read_bytes()).hexdigest()
+        data_root = Path(__file__).parent.parent.parent / "data"
+        expected_validator_hash = (data_root / "output_validator_hash.txt").read_text()
+        if sha256_hash != expected_validator_hash:
+            self.print_warning(f"Outdated 'validate.h' in input validator. Get the newest from 'testdata_tools'")
+
 
     def check_testdata_root(self, path):
         if (path / "testdata.yaml").exists():
@@ -88,6 +114,7 @@ class CheckFiles(Checker):
     def handle_problem(self, path):
         self.check_testdata(path)
         self.check_input_validator(path)
+        self.check_output_validator(path)
         self.check_testdata_root(path)
         self.check_statements(path)
         self.check_timelim(path)

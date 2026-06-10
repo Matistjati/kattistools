@@ -49,7 +49,7 @@ class CheckStatementPO(Checker):
                 if not has_scoring_text:
                     self.print_warning("(sv) Has Poängsättning-section, but improper scoring text")
 
-            if box := parse_subtask_box(path, self):
+            if box := parse_subtask_box(path):
                 LAST_SUBTASK_TEXT = "Inga ytterligare begränsningar."
                 for line in box.subtask_lines:
                     constraints = line.constraints.strip()
@@ -87,7 +87,7 @@ class CheckStatementPO(Checker):
                 if not has_scoring_text:
                     self.print_warning("(en) Has Scoring-section, but improper scoring text")
 
-            if box := parse_subtask_box(path, self):
+            if box := parse_subtask_box(path):
                 LAST_SUBTASK_TEXT = "No additional constraints."
                 for line in box.subtask_lines:
                     constraints = line.constraints.strip()
