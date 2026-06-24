@@ -40,7 +40,7 @@ class CheckFiles(Checker):
         data_root = Path(__file__).parent.parent.parent / "data"
         expected_validator_hash = (data_root / "output_validator_hash.txt").read_text()
         if sha256_hash != expected_validator_hash:
-            self.print_warning(f"Outdated 'validate.h' in input validator. Get the newest from 'testdata_tools'")
+            self.print_warning(f"Outdated 'validate.h' in output validator. Get the newest from 'testdata_tools'")
 
 
     def check_testdata_root(self, path):
