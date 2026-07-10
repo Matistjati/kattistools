@@ -18,3 +18,28 @@ class CheckData(Checker):
             for line in lines:
                 if len(line) and line[-1].isspace():
                     self.print_warning(f"Sample file '{statement_file.relative_to(path)}' has trailing whitespace")
+
+        self.check_sample_before_secret(path)
+
+    def check_sample_before_secret(self, path: Path):
+        # Kattis sorts all test cases by name, so every sample case name must be
+        # lexicographically smaller than every secret case name for the samples
+        # to run/display before the secret data.
+        sample_path = path / 'data' / 'sample'
+        secret_path = path / 'data' / 'secret'
+        if not secret_path.exists():
+            return
+
+        def case_names(root: Path):
+            return sorted({f.stem for f in root.rglob('*') if f.suffix in {'.in', '.interaction'}})
+
+        sample_names = case_names(sample_path)
+        secret_names = case_names(secret_path)
+        if not sample_names or not secret_names:
+            return
+
+        if sample_names[-1] >= secret_names[0]:
+            self.print_warning(
+                f"Sample case '{sample_names[-1]}' is not lexicographically smaller than "
+                f"secret case '{secret_names[0]}'; samples may not sort before secret data"
+            )
