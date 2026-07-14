@@ -19,27 +19,57 @@ class CheckData(Checker):
                 if len(line) and line[-1].isspace():
                     self.print_warning(f"Sample file '{statement_file.relative_to(path)}' has trailing whitespace")
 
-        self.check_sample_before_secret(path)
+        self.check_sample_copies_sort_first(path)
 
-    def check_sample_before_secret(self, path: Path):
-        # Kattis sorts all test cases by name, so every sample case name must be
-        # lexicographically smaller than every secret case name for the samples
-        # to run/display before the secret data.
-        sample_path = path / 'data' / 'sample'
-        secret_path = path / 'data' / 'secret'
-        if not secret_path.exists():
+    def check_sample_copies_sort_first(self, path: Path):
+        # One should do include_group sample as good hygiene
+        # Because kattis sorts test cases within a group by their name such as 1.in, g2-10.in
+        # instead of sample/1.in and secret/g2/g2-10.in, samples can sometimes appears last in a group,
+        # which is misleading in the UI
+        #
+        # Detect non-symlink cases by checking for content equality,
+        # using the fact that samples ought to be small for performance gains
+        data_path = path / 'data'
+        sample_path = data_path / 'sample'
+        secret_path = data_path / 'secret'
+        if not sample_path.exists() or not secret_path.exists():
             return
 
-        def case_names(root: Path):
-            return sorted({f.stem for f in root.rglob('*') if f.suffix in {'.in', '.interaction'}})
+        exts = {'.in', '.interaction'}
+        sample_resolved = set()
+        sample_by_size = {}
+        for f in sample_path.rglob('*'):
+            if f.suffix in exts and f.is_file():
+                sample_resolved.add(f.resolve())
+                sample_by_size.setdefault(f.stat().st_size, []).append(f.read_bytes())
 
-        sample_names = case_names(sample_path)
-        secret_names = case_names(secret_path)
-        if not sample_names or not secret_names:
-            return
+        def is_sample_copy(f: Path) -> bool:
+            if f.is_symlink() and f.resolve() in sample_resolved:
+                return True
+            try:
+                size = f.stat().st_size
+            except OSError:
+                # Broken symlink, not a copy
+                return False
+            contents = sample_by_size.get(size)
+            return contents is not None and f.read_bytes() in contents
 
-        if sample_names[-1] >= secret_names[0]:
-            self.print_warning(
-                f"Sample case '{sample_names[-1]}' is not lexicographically smaller than "
-                f"secret case '{secret_names[0]}'; samples may not sort before secret data"
-            )
+        # Group cases by their containing directory; each directory is a group.
+        groups = {}
+        for f in secret_path.rglob('*'):
+            if f.suffix in exts and (f.is_file() or f.is_symlink()):
+                groups.setdefault(f.parent, []).append(f)
+
+        for group_dir, files in groups.items():
+            copies = [f.stem for f in files if is_sample_copy(f)]
+            others = [f.stem for f in files if f.stem not in copies]
+            if not copies or not others:
+                continue
+            smallest_other = min(others)
+            for stem in copies:
+                if stem >= smallest_other:
+                    self.print_warning(
+                        f"Sample copy '{(group_dir / stem).relative_to(path)}' is not "
+                        f"lexicographically smaller than the rest of its group "
+                        f"(e.g. case '{smallest_other}'); it will not sort first"
+                    )

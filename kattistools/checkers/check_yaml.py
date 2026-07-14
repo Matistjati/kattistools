@@ -94,11 +94,6 @@ class ProblemYamlChecker(Checker):
             if key in problem_yaml:
                 self.print_error(f"problem.yaml should not have field {key}")
 
-        useless_keys_legacy = ["name"]
-        for key in useless_keys_legacy:
-            if key in problem_yaml:
-                self.print_warning_if(f"problem.yaml field {key} does nothing in problem format Legacy",
-                                      [self.perform_strict_checks])
 
         disallowed_author_special_chars = [
             '/', '\\', '<', '>', '$', '"', "'",

@@ -35,7 +35,8 @@ class CheckFiles(Checker):
         validate_h = [h for h in validator_dir.glob('*.h') if h.name=="validate.h"]
         if len(validate_h) == 0:
             self.print_error("Output validator does not use validate.h")
-        
+            return
+
         sha256_hash = hashlib.sha256(validate_h[0].read_bytes()).hexdigest()
         data_root = Path(__file__).parent.parent.parent / "data"
         expected_validator_hash = (data_root / "output_validator_hash.txt").read_text()
