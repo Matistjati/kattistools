@@ -29,11 +29,11 @@ class CheckDataYAML(Checker):
     def handle_problem(self, path):
         if not is_scoring_problem(path):
             return
-        
+
         data_root = path / 'data'
         if not data_root.exists():
             return
-        
+
         self.check_node(data_root, data_root)
         sample_root = data_root / 'sample'
         if sample_root.exists():
@@ -42,14 +42,14 @@ class CheckDataYAML(Checker):
         secret_root = data_root / 'secret'
         if not secret_root.exists():
             return
-        
+
         self.check_node(data_root, secret_root)
 
         subtask_dirs = list(dir for dir in secret_root.iterdir() if dir.is_dir())
         if len(subtask_dirs) == 0:
             self.print_error("No subtasks in secret")
             return
-        
+
         for subtask_dir in subtask_dirs:
             self.check_node(data_root, subtask_dir)
             sub_subtask_dirs = list(dir for dir in subtask_dir.iterdir() if dir.is_dir())

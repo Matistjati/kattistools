@@ -103,6 +103,10 @@ class CheckFiles(Checker):
         '.data', '.old'
     }
 
+    disallowed_directories = { # Artifact from test data generation
+        'data_generation'
+    }
+
     def check_disallowed(self, path):
         for ext in self.disallowed_extensions:
             for file in path.rglob(f'*{ext}'):
@@ -110,6 +114,10 @@ class CheckFiles(Checker):
                     continue
 
                 self.print_warning(f"Stray temporary file: '{file.relative_to(path)}'")
+        
+        for dir in self.disallowed_directories:
+            if (path / dir).exists():
+                self.print_warning(f"Directory '{dir}' exists. Likely temporary folder, consider removing")
 
 
     def handle_problem(self, path):

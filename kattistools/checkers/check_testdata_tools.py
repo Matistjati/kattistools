@@ -26,15 +26,25 @@ class TestdataToolsChecker(Checker):
 
         data_root = Path(__file__).parent.parent.parent / "data"
         gen_sh_hash = (data_root / "generator_hash.txt").read_text()
+        input_val_hash = (data_root / "input_validator_hash.txt").read_text()
+        output_val_hash = (data_root / "output_validator_hash.txt").read_text()
         for testdata_tools in testdata_tools_locs:
-            gen_location = testdata_tools / "gen.sh"
-            if not gen_location.exists():
-                self.print_error(f"testdata_tools at '{testdata_tools.relative_to(path)}' does not contain a generator")
-                continue
+            for loc, hash in (('gen.sh', gen_sh_hash),
+                              ('input_validators/validator/validator.h', input_val_hash),
+                              ('output_validators/validator/validate.h', output_val_hash)):
+                location = testdata_tools / loc
+                if not location.exists():
+                    self.print_error(f"testdata_tools at '{testdata_tools.relative_to(path)}' is broken or outdated. Pull the latest version from 'git@github.com:Kodsport/testdata_tools.git'")
+                    break
 
-            sha256_hash = hashlib.sha256(gen_location.read_bytes()).hexdigest()
-            if sha256_hash != gen_sh_hash:
-                self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' has an outdated generator. Pull the latest version from 'git@github.com:Kodsport/testdata_tools.git'")
+                sha256_hash = hashlib.sha256(location.read_bytes()).hexdigest()
+                if sha256_hash != hash:
+                    self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' is outdated. Pull the latest version from 'git@github.com:Kodsport/testdata_tools.git'")
 
             if (testdata_tools / '.git').exists():
                 self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' is a git repo. Delete its .git folder")
+
+            if (testdata_tools / 'examples').exists():
+                self.print_info('testdata_tools has examples folder. Consider removing')
+
+            
