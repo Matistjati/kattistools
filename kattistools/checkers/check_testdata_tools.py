@@ -34,12 +34,13 @@ class TestdataToolsChecker(Checker):
                               ('output_validators/validator/validate.h', output_val_hash)):
                 location = testdata_tools / loc
                 if not location.exists():
-                    self.print_error(f"testdata_tools at '{testdata_tools.relative_to(path)}' is broken or outdated. Pull the latest version from 'git@github.com:Kodsport/testdata_tools.git'")
+                    self.print_warning(f"testdata_tools at '{testdata_tools.relative_to(path)}' is broken or outdated. Pull the latest version from 'git@github.com:Kodsport/testdata_tools.git'")
                     break
 
                 sha256_hash = hashlib.sha256(location.read_bytes()).hexdigest()
                 if sha256_hash != hash:
                     self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' is outdated. Pull the latest version from 'git@github.com:Kodsport/testdata_tools.git'")
+                    break
 
             if (testdata_tools / '.git').exists():
                 self.print_warning(f"testdata_tools '{testdata_tools.relative_to(path)}' is a git repo. Delete its .git folder")
