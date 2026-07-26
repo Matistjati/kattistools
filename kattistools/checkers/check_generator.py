@@ -19,7 +19,7 @@ class GeneratorChecker(Checker):
         if gen is None:
             self.print_warning("Couldn't find generator for problem")
             return
-        
+
         generator_text = gen.read_text()
         if "sample_manual" in generator_text:
             custom_validation = (path / 'output_validators').exists()
@@ -32,6 +32,9 @@ class GeneratorChecker(Checker):
 
             if not custom_validation:
                 self.print_warning("Avoid using 'sample_manual' if there is no output validator")
+
+        if "PPATH" in generator_text:
+            self.print_warning("Generator: PPATH is deprecated")
 
         # Check: there should be no REQUIRE_SAMPLE_REUSE
         for line in generator_text.splitlines():
@@ -61,7 +64,7 @@ class GeneratorChecker(Checker):
             self.print_error("Number of groups in generator and secret mismatch")
             self.print_error(f"secret: {secret_groups}, generator: {generator_group_names}")
             return
-        
+
         if secret_groups!=generator_group_names:
             self.print_error("Order of groups in generator and secret mismatch")
             self.print_error(f"secret: {secret_groups}, gen: {generator_group_names}")
