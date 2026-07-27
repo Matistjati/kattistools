@@ -2,7 +2,7 @@ from pathlib import Path
 
 from kattistools.checkers.checker import Checker
 from kattistools.checkers.check_subtask_box import parse_subtask_box
-from kattistools.common import count_subtasks, get_statements, get_language_code
+from kattistools.common import count_subtasks, get_statements, get_language_code, format_score, format_scores
 from kattistools.args import Args
 
 class CheckScoreMatchesStatement(Checker):
@@ -40,7 +40,7 @@ class CheckScoreMatchesStatement(Checker):
         if not all(statement_scores[0]==score for score in statement_scores):
             self.print_error(f"Different statements disagree on subtask scores")
             for lang_code, scores in zip(statement_languages, statement_scores):
-                self.print_error(f"\t{lang_code}: {scores}")
+                self.print_error(f"\t{lang_code}: {format_scores(scores)}")
             return None
 
         return statement_scores[0]
@@ -62,7 +62,7 @@ class CheckScoreMatchesStatement(Checker):
             return
 
         if abs(sum(secret_scores) - 100) > 0.01:
-            self.print_warning(f"secret: total score is {sum(secret_scores)}, not 100")
+            self.print_warning(f"secret: total score is {format_score(sum(secret_scores))}, not 100")
 
         # We only have scoring text if we have subtasks
         if count_subtasks(path) > 1:
@@ -73,5 +73,5 @@ class CheckScoreMatchesStatement(Checker):
 
             if statement_scores != secret_scores:
                 self.print_error("Score mismatch between statement and test data")
-                self.print_error(f"\tSecret:       {secret_scores}")
-                self.print_error(f"\tStatement(s): {statement_scores}")
+                self.print_error(f"\tSecret:       {format_scores(secret_scores)}")
+                self.print_error(f"\tStatement(s): {format_scores(statement_scores)}")

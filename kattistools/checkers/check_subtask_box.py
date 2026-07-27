@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 
-from kattistools.common import get_statements, get_language_code, count_subtasks, has_secret_data
+from kattistools.common import get_statements, get_language_code, count_subtasks, has_secret_data, format_score
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 from dataclasses import dataclass
@@ -137,7 +137,7 @@ class CheckSubtaskBox(Checker):
 
             subtask_sum = sum(line.point_value for line in box.subtask_lines)
             if abs(subtask_sum - 100) > 0.01:
-                self.print_error(f"({get_language_code(statement)}) sum of subtasks in subtask box is {subtask_sum}, not 100")
+                self.print_error(f"({get_language_code(statement)}) sum of subtasks in subtask box is {format_score(subtask_sum)}, not 100")
 
             expected_group = 1
 

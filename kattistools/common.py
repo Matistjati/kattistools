@@ -98,6 +98,12 @@ def count_subtasks(problem_path: Path):
     secret_path = problem_path / 'data' / 'secret'
     return len([path for path in secret_path.glob('*') if path.is_dir()])
 
+def format_score(score: float) -> str:
+    return str(int(score)) if float(score).is_integer() else str(score)
+
+def format_scores(scores: list[float]) -> str:
+    return "[" + ", ".join(format_score(score) for score in scores) + "]"
+
 def has_secret_data(problem_path: Path):
     secret_path = problem_path / 'data' / 'secret'
     return secret_path.exists()
