@@ -25,38 +25,52 @@ def parse_subtask_box(statement_path: Path, checker: Checker | None = None) -> S
         lines = f.readlines()
 
     lang = get_language_code(statement_path)
-    # Accept any column width (p{Ncm}) and flexible whitespace, rather than a
-    # single hard-coded literal, since statements legitimately use different widths.
     HEADER_LINES = {
         "sv": re.compile(r"\\textbf\{Grupp\}\s*&\s*\\textbf\{Poäng\}\s*&\s*\\textbf\{Gränser\}\s*\\\\\s*\\hline"),
         "en": re.compile(r"\\textbf\{(?:Group|Subtask)\}\s*&\s*\\textbf\{Points\}\s*&\s*\\textbf\{Constraints\}\s*\\\\\s*\\hline"),
     }
-    HEADER_FORMAT = re.compile(r"\\begin\{tabular\}\{\|\s*l\s*\|\s*l\s*\|\s*p\{[\d.]+cm\}\s*\|\}")
+    HUMAN_READABLE_HEADER_LINES = {
+        "sv": r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline",
+        "en": r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"
+    }
+    HEADER_FORMAT = re.compile(r"\\begin\{tabular\}\{\|\s*l\s*\|\s*l\s*\|\s*p\{12cm\}\s*\|\}")
+    HUMAN_READABLE_HEADER_FORMAT = r"\begin{tabular}{| l | l | p{12cm} |}"
     SUBTASK_BOX_END = r"\end{tabular}"
-    header_re = HEADER_LINES[lang]
+    column_header_re = HEADER_LINES[lang]
 
-    if not any(header_re.search(line) for line in lines) or not any(HEADER_FORMAT.search(line) for line in lines):
-        if checker:
-            checker.print_warning(f"({lang}) missing modern subtask box in {statement_path.name}")
-        return None
-
-    start = [i for i in range(len(lines)) if header_re.search(lines[i])]
-    if len(start) > 1:
+    box_start = [i for i in range(len(lines)) if HEADER_FORMAT.search(lines[i])]
+    if len(box_start) > 1:
         if checker:
             checker.print_warning(f"({lang}) More than one subtask box")
         return None
-    if len(start) == 0:
+    if len(box_start) == 0:
         if checker:
-            checker.print_warning(f"({lang}) missing modern subtask box {statement_path.name}")
+            checker.print_warning(f"({lang}) missing modern subtask box in {statement_path.name}. Expected header '{HUMAN_READABLE_HEADER_FORMAT}'")
         return None
-    start = start[0]
-    end = [i for i in range(len(lines)) if SUBTASK_BOX_END in lines[i] and i > start]
+
+    start = box_start[0]
+    if not HEADER_FORMAT.fullmatch(lines[start].strip()):
+        if checker:
+            checker.print_warning(f"({lang}) malformed subtask box in {statement_path.name}. Nothing may follow '{HUMAN_READABLE_HEADER_FORMAT}' on its line, \\hline goes on the next line")
+        return None
+
+    if start+1 >= len(lines) or lines[start+1].strip() != r"\hline":
+        if checker:
+            checker.print_warning(f"({lang}) missing modern subtask box in {statement_path.name}. Line after header should be \\hline")
+        return None
+
+    if start+2 >= len(lines) or not column_header_re.search(lines[start+2]):
+        if checker:
+            checker.print_warning(f"({lang}) missing modern subtask box in {statement_path.name}. Column header should be {HUMAN_READABLE_HEADER_LINES[lang]}")
+        return None
+
+    end = [i for i in range(len(lines)) if SUBTASK_BOX_END in lines[i] and i > start+2]
     if len(end) == 0:
         if checker:
-            checker.print_warning(f"({lang}) did not close subtask box")
+            checker.print_warning(f"({lang}) did not close subtask box with ' {SUBTASK_BOX_END} '")
         return None
     end = min(end)
-    subtask_lines = lines[start+1:end]
+    subtask_lines = lines[start+3:end]
     if len(subtask_lines) == 0:
         if checker:
             checker.print_warning(f"({lang}) Could not find any subtasks in subtask box")
