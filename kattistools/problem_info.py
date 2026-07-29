@@ -25,6 +25,7 @@ class ProblemInfo:
     score: ScoreResult
     source: str
     rights_owner: str
+    license: str
     author: str
     has_english_statement: bool
     languages: list[str]
@@ -244,6 +245,7 @@ def collect_problem_info(problem: Path) -> ProblemInfo:
         score=score,
         source=problem_yaml.get('source', 'N/A'),
         rights_owner=problem_yaml.get('rights_owner', 'N/A'),
+        license=problem_yaml.get('license', 'N/A'),
         author=problem_yaml.get('author', 'N/A'),
         has_english_statement=(problem / "problem_statement" / "problem.en.tex").exists(),
         languages=languages,
@@ -276,6 +278,8 @@ def add_table_row(table, info: ProblemInfo, args) -> None:
         row.append(info.source)
     if args.rights_owner:
         row.append(info.rights_owner)
+    if args.license:
+        row.append(info.license)
     if args.author:
         row.append(info.author)
     if args.english_statement:
@@ -296,6 +300,7 @@ if __name__ == "__main__":
     parser.add_argument('directory', type=Path, help='Directory to recursively scan')
     parser.add_argument('--source', help='Show source column (default: yes)', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--rights-owner', help='Show rights_owner column (default: no)', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--license', help='Show license column (default: no)', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--author', help='Show author column (default: no)', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--english-statement', help='Show whether problem.en.tex exists (default: no)', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--lang', help='Show statement languages column (default: no)', action=argparse.BooleanOptionalAction, default=False)
@@ -305,6 +310,7 @@ if __name__ == "__main__":
 
     if args.all:
         args.rights_owner = True
+        args.license = True
         args.author = True
         args.english_statement = True
         args.lang = True
@@ -337,6 +343,8 @@ if __name__ == "__main__":
         table.add_column("Source", justify="left", no_wrap=True)
     if args.rights_owner:
         table.add_column("Rights Owner", justify="left", no_wrap=True)
+    if args.license:
+        table.add_column("License", justify="left", no_wrap=True)
     if args.author:
         table.add_column("Author", justify="left", no_wrap=True)
     if args.english_statement:
