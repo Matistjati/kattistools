@@ -75,6 +75,17 @@ class ProblemYamlChecker(Checker):
             self.print_warning_if("No rights_owner given: should be \"rights_owner: Programmeringsolympiaden\"",
                                   [self.is_po_problem])
 
+    def check_license(self, yaml):
+        desired_license = 'cc by-sa'
+        if 'license' not in yaml:
+            self.print_error(f"No license given: should be \"license: {desired_license}\"")
+            return
+        yaml_license = str(yaml['license']).strip()
+        if yaml_license.lower() == 'unknown':
+            self.print_error(f"license is 'unknown': should be \"license: {desired_license}\"")
+        elif yaml_license.lower() != desired_license:
+            self.print_warning(f"license is '{yaml_license}', normally it should be '{desired_license}'")
+
     def handle_problem(self, path):
         # We can assume that problem.yaml exists, since that is precondition to be considred a problem
         lines = []
@@ -87,6 +98,7 @@ class ProblemYamlChecker(Checker):
 
         self.check_source_PO(lines, path)
         self.check_rights_owner(problem_yaml)
+        self.check_license(problem_yaml)
 
         # Forbid name until the new problem format
         forbidden_keys = ["on_reject", "range", "objective"]

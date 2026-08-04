@@ -29,3 +29,19 @@ def test_validation_custom_ok():
     messages = get_messages_for_path("tests/problems/validation_custom")
     # Should NOT have the validation warning now
     assert not any("validation: default" in msg for msg in messages)
+
+def test_license_missing():
+    messages = get_messages_for_path("tests/problems/license_missing")
+    assert any("No license given" in msg for msg in messages)
+
+def test_license_unknown():
+    messages = get_messages_for_path("tests/problems/license_unknown")
+    assert any("license is 'unknown'" in msg for msg in messages)
+
+def test_license_other():
+    messages = get_messages_for_path("tests/problems/license_other")
+    assert any("license is 'educational'" in msg for msg in messages)
+
+def test_license_ok():
+    messages = get_messages_for_path("tests/problems/license_ok")
+    assert not any("license" in msg for msg in messages)
