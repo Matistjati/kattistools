@@ -44,4 +44,11 @@ class ConsistentSourceChecker(Checker):
                 if distance <= 3:
                     similar_pairs.add((min(source_1, source_2), max(source_1, source_2)))
         for source_1, source_2 in similar_pairs:
+            if "Day 1" in source_1 or "Day 2" in source_1:
+                # False positive: 
+                # International Olympiad in Informatics (IOI) 2022, Day 1
+                # and
+                # International Olympiad in Informatics (IOI) 2022, Day 2
+                # in the same folder is fine
+                continue
             self.print_error(f"Problem sources {source_1} and {source_2} are similar but not same, typo?")

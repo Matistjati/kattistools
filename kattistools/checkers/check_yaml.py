@@ -4,6 +4,7 @@ import yaml
 from kattistools.checkers.checker import Checker
 from kattistools.common import edit_distance
 from kattistools.args import Args
+import re
 
 class ProblemYamlChecker(Checker):
     def __init__(self, path: Path, args: Args):
@@ -63,6 +64,14 @@ class ProblemYamlChecker(Checker):
             if yaml_source != desired_source:
                 self.print_error(f"source is '{yaml_source}', want '{desired_source}'")
 
+    def check_source_ioi_like(self, yaml, path: Path):
+        known_olympiads = ["IOI", "CEOI", "BOI", "EGOI"]
+        if any(olympiad_name.lower() in part.lower() for part in path.resolve().parts for olympiad_name in known_olympiads):
+            desired_source = r"^[A-Z][a-zA-Z']*( [a-zA-Z']+)* \([A-Z]+\) \d{4}, (Day \d|Practice Contest)$"
+            source = yaml.get("source", "")
+            if re.match(desired_source, source) is None:
+                self.print_error(f'source is "{source}", want something like "European Girls\' Olympiad in Informatics (EGOI) 2023, Day 1"')
+
 
     def check_rights_owner(self, yaml):
         # If there is no owner, we should change it to PO
@@ -97,6 +106,7 @@ class ProblemYamlChecker(Checker):
                 problem_yaml = {}
 
         self.check_source_PO(lines, path)
+        self.check_source_ioi_like(problem_yaml, path)
         self.check_rights_owner(problem_yaml)
         self.check_license(problem_yaml)
 
