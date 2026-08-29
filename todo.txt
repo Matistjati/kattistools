@@ -1,3 +1,6 @@
 # Medium prio
 subtask scores are reasonable (finite, add up etc.). testdata.yamls
 exclude dir cmd line option
+complain if sample is reused in pass-fail problems
+
+error if too much test data (.in, .ans, symlink)

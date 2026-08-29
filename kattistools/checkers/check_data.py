@@ -60,6 +60,7 @@ class CheckData(Checker):
             if f.suffix in exts and (f.is_file() or f.is_symlink()):
                 groups.setdefault(f.parent, []).append(f)
 
+        num_faults = 0
         for group_dir, files in groups.items():
             copies = [f.stem for f in files if is_sample_copy(f)]
             others = [f.stem for f in files if f.stem not in copies]
@@ -68,8 +69,12 @@ class CheckData(Checker):
             smallest_other = min(others)
             for stem in copies:
                 if stem >= smallest_other:
-                    self.print_warning(
-                        f"Sample copy '{(group_dir / stem).relative_to(path)}' is not "
-                        f"lexicographically smaller than the rest of its group "
-                        f"(e.g. case '{smallest_other}'); it will not sort first"
-                    )
+                    num_faults += 1
+                    if num_faults == 1:
+                        self.print_warning(
+                            f"Sample copy '{(group_dir / stem).relative_to(path)}' is not "
+                            f"lexicographically smaller than the rest of its group "
+                            f"(e.g. case '{smallest_other}'); it will not sort first"
+                        )
+        if num_faults > 1:
+            self.print_warning(f"{num_faults} other lexicographic sample warnings were suppressed")
