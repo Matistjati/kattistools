@@ -77,4 +77,4 @@ class CheckData(Checker):
                             f"(e.g. case '{smallest_other}'); it will not sort first"
                         )
         if num_faults > 1:
-            self.print_warning(f"{num_faults} other lexicographic sample warnings were suppressed")
+            self.print_warning(f"{num_faults - 1} other lexicographic sample warnings were suppressed")

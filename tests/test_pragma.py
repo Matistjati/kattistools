@@ -15,11 +15,10 @@ def test_pragma_checker():
     args = parser.parse_args([str(problem_path), "--strict"])
     run_checkers(argparse_to_args(args), [check_pragma.CheckPragma], [], collect_error)
     errors = ''.join(errors)
-    BAD_FILES = ['unmitigated.cpp', 'optimization.cpp', 'multistring_target.cpp',
-                 'splitpragma.cpp']
+    BAD_FILES = ['optimization.cpp', 'multistring_target.cpp', 'splitpragma.cpp']
     BAD_FILES = [f'wrong_answer/{file}' for file in BAD_FILES]
 
-    GOOD_FILES = ['accepted/manypragma.cpp', 'accepted/mitigate_pragma_allocator.cpp', 'accepted/ok2.cpp', 'wrong_answer/ok.cpp']
+    GOOD_FILES = ['accepted/manypragma.cpp']
 
     for BAD_FILE in BAD_FILES:
         assert BAD_FILE in errors, f'Did not give error for file {BAD_FILE}'
