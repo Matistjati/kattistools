@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import subprocess
 import yaml
 
@@ -56,6 +57,8 @@ def gitignored(path: Path, files: list[str]) -> set[str]:
         return set()
     return {f.decode() for f in result.stdout.split(b'\0') if f}
 
+SOURCES_GEN_SH = re.compile(r'\s*(\.|source)\s+\S*gen\.sh\b')
+
 def is_generator(file: Path) -> bool:
     if not file.is_file():
         return False
@@ -64,13 +67,15 @@ def is_generator(file: Path) -> bool:
     # Skolkval generators are only temporary
     if "skolkval" in file.name:
         return False
+    with open(file, "r") as f:
+        lines = f.readlines()
     # Sometimes, people add a modified testdata_tools generator
     # in the data directory. This is not a generator
-    with open(file, "r") as f:
-        is_testdata_tools = any(line.startswith('# This file') for line in f.readlines())
-        if is_testdata_tools:
-            return False
-    return True
+    if any(line.startswith('# This file') for line in lines):
+        return False
+    # A real generator sources testdata_tools' gen.sh. Example such:
+    # . ../../gen.sh
+    return any(SOURCES_GEN_SH.match(line) for line in lines)
 
 def get_generator(data_path: Path):
     for item in data_path.glob('*'):
