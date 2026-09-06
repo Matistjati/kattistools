@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import hashlib
 
-from kattistools.common import get_statements
+from kattistools.common import get_statements, gitignored
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 
@@ -97,27 +97,41 @@ class CheckFiles(Checker):
                 except:
                     pass
 
-    # TODO: only complain about this if it's not in the gitignore
-    # also disallow score.txt
     disallowed_extensions = { # don't push perf stuff
         '.data', '.old'
     }
 
-    disallowed_directories = { # Artifact from test data generation
-        'data_generation'
+    # Only checked in the problem root
+    disallowed_files = { # Artifact from stress testing
+        'score.txt'
+    }
+
+    # Only checked in the problem root. .vscode is handled repo-wide by CheckRepoFiles
+    disallowed_directories = {
+        'data_generation' # Artifact from test data generation
     }
 
     def check_disallowed(self, path):
+        candidates: list[tuple[str, str]] = [] # (path relative to problem, warning)
         for ext in self.disallowed_extensions:
             for file in path.rglob(f'*{ext}'):
                 if not file.is_file():
                     continue
+                rel = str(file.relative_to(path))
+                candidates.append((rel, f"Stray temporary file: '{rel}'"))
 
-                self.print_warning(f"Stray temporary file: '{file.relative_to(path)}'")
-        
+        for file in self.disallowed_files:
+            if (path / file).is_file():
+                candidates.append((file, f"Stray temporary file: '{file}'"))
+
         for dir in self.disallowed_directories:
             if (path / dir).exists():
-                self.print_warning(f"Directory '{dir}' exists. Likely temporary folder, consider removing")
+                candidates.append((dir, f"Directory '{dir}' exists. Likely temporary folder, consider removing"))
+
+        ignored = gitignored(path, [rel for rel, _ in candidates])
+        for rel, message in candidates:
+            if rel not in ignored:
+                self.print_warning(message)
 
 
     def handle_problem(self, path):

@@ -14,7 +14,7 @@ def test_pragma_checker():
         for _, value in e.items():
             errors[path] += value
     problem_path = Path(__file__).parent / 'problems' / 'quotes'
-    run_checkers(path_to_args(problem_path), [check_statement.CheckStatement], [], collect_error)
+    run_checkers(path_to_args(problem_path), [check_statement.CheckStatement], [], [], collect_error)
     
     num_quote_errors = sum(1 if any("Don't use" in err for err in errs) else 0 for errs in errors.values())
     assert num_quote_errors == len(list(problem_path.glob("*_bad*")))

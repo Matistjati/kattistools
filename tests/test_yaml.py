@@ -13,7 +13,7 @@ def get_messages_for_path(path_str):
         for msgs in e.values():
             all_messages.extend(msgs)
 
-    run_checkers(args, [ProblemYamlChecker], [], collect_error)
+    run_checkers(args, [ProblemYamlChecker], [], [], collect_error)
     return all_messages
 
 def test_validation_default():

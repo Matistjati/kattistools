@@ -9,7 +9,7 @@ def collect(path):
     def collect_error(p, e):
         for msgs in e.values():
             all_messages.extend(msgs)
-    run_checkers(args, [CheckData], [], collect_error)
+    run_checkers(args, [CheckData], [], [], collect_error)
     return all_messages
 
 def test_sample_copy_not_first_in_group():

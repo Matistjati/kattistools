@@ -25,6 +25,7 @@ from kattistools.checkers.check_data import CheckData
 from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
 from kattistools.checkers.check_unique_uuid import UniqueUUIDChecker
 from kattistools.checkers.check_testdata_tools import TestdataToolsChecker
+from kattistools.checkers.check_repo_files import CheckRepoFiles
 from kattistools.common import *
 from kattistools.args import Args, parse_cmdline_args
 
@@ -53,10 +54,11 @@ contest_checkers = [
     UniqueUUIDChecker
 ]
 
-# From every problem, traverse upwards until we find a folder with .git. Run these checkers here
+# From every problem, traverse upwards until we find a folder with .git. Run these checkers here, once per repo
 repo_checkers = [
     UniqueUUIDChecker,
-    TestdataToolsChecker
+    TestdataToolsChecker,
+    CheckRepoFiles
 ]
 
 def find_rightmost_year(path: Path) -> int | None:
@@ -93,7 +95,7 @@ def aggregate_skips(path: Path, skips):
             all_skips[skip_reason] = 0
         all_skips[skip_reason] += amount
 
-def run_checkers(args: Args, per_problem_checkers, contest_checkers, error_callback, skip_callback=None):
+def run_checkers(args: Args, problem_checkers, contest_checkers, repo_checkers, error_callback, skip_callback=None):
     problems = gather_problems(args.path)
 
     def deduplicate(items):
@@ -132,7 +134,7 @@ def run_checkers(args: Args, per_problem_checkers, contest_checkers, error_callb
             error_callback(dir, errors)
     
     for problem in problems:
-        _run_checkers(per_problem_checkers, problem)
+        _run_checkers(problem_checkers, problem)
     for contest in contests:
         _run_checkers(contest_checkers, contest)
     for repo in repos:
@@ -146,7 +148,7 @@ if __name__ == "__main__":
         console.print(f"[red]Error[/red]: folder {directory} does not exist")
         sys.exit(1)
 
-    run_checkers(args, per_problem_checkers, contest_checkers, print_errors, aggregate_skips)
+    run_checkers(args, per_problem_checkers, contest_checkers, repo_checkers, print_errors, aggregate_skips)
 
     if all_skips:
         console.print(f"[{BLUE}]Info[/{BLUE}]: suppressed errors/warnings because following modes were not set")

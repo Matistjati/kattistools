@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 import yaml
 
 EXCLUDED_DIRS = [".git", "testdata_tools"]
@@ -33,6 +34,27 @@ def gather_problems(path: Path) -> list[Path]:
 
     _directory_dfs(path)
     return problems
+
+def gitignored(path: Path, files: list[str]) -> set[str]:
+    """Return the subset of `files` (relative to `path`) that git ignores.
+
+    Tracked files are never reported as ignored, since they will be pushed
+    regardless of any ignore rule. If `path` is not inside a git repository
+    (or git is unavailable) nothing is ignored."""
+    if not files:
+        return set()
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(path), 'check-ignore', '--stdin', '-z'],
+            input=b'\0'.join(f.encode() for f in files),
+            capture_output=True,
+        )
+    except OSError:
+        return set()
+    # 0: some paths ignored, 1: none ignored, 128: fatal (e.g. not a git repo)
+    if result.returncode not in (0, 1):
+        return set()
+    return {f.decode() for f in result.stdout.split(b'\0') if f}
 
 def is_generator(file: Path) -> bool:
     if not file.is_file():

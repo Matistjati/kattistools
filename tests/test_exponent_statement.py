@@ -11,7 +11,7 @@ def test_pragma_checker():
         for _, value in e.items():
             errors += value
     problem_path = Path(__file__).parent / 'problems' / 'latex_exponents'
-    run_checkers(path_to_args(problem_path), [check_statement.CheckStatement], [], collect_error)
+    run_checkers(path_to_args(problem_path), [check_statement.CheckStatement], [], [], collect_error)
     errors = ''.join(errors)
     BAD_FILES = ['en', 'sv']
     BAD_FILES = [f'({language}) statement: you probably forgot to add brackets' for language in BAD_FILES]

@@ -15,7 +15,7 @@ def test_subtask_boxes():
 
         parser = get_argparser()
         args = argparse_to_args(parser.parse_args([str(path), "--PO"]))
-        run_checkers(args, [checker], [], collect_error)
+        run_checkers(args, [checker], [], [], collect_error)
         return errors
     bad_root = Path(__file__).parent / 'problems' / 'subtask_boxes' / 'bad'
     

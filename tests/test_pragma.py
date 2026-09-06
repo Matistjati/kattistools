@@ -13,7 +13,7 @@ def test_pragma_checker():
     problem_path = Path(__file__).parent / 'problems' / 'pragma'
     parser = get_argparser()
     args = parser.parse_args([str(problem_path), "--strict"])
-    run_checkers(argparse_to_args(args), [check_pragma.CheckPragma], [], collect_error)
+    run_checkers(argparse_to_args(args), [check_pragma.CheckPragma], [], [], collect_error)
     errors = ''.join(errors)
     BAD_FILES = ['optimization.cpp', 'multistring_target.cpp', 'splitpragma.cpp']
     BAD_FILES = [f'wrong_answer/{file}' for file in BAD_FILES]
