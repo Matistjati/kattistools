@@ -25,6 +25,15 @@ class CheckDataYAML(Checker):
             self.print_error(f"'range' is missing in 'data/{testdata_yaml.relative_to(root)}'")
             return
 
+        # problemtools only warns when accept_score is below the range max
+        try:
+            range_max = float(str(problem_yaml['range']).split()[1])
+            if float(problem_yaml.get('accept_score', 0)) > range_max:
+                self.print_error(f"accept_score {problem_yaml['accept_score']} is above range '{problem_yaml['range']}' in 'data/{testdata_yaml.relative_to(root)}'")
+        except (IndexError, ValueError):
+            # Malformed range is reported by problemtools
+            pass
+
 
     def handle_problem(self, path):
         if not is_scoring_problem(path):

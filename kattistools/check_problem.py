@@ -21,6 +21,7 @@ from kattistools.checkers.check_pragma import CheckPragma
 from kattistools.checkers.check_ioi_scoring import IOIScoringChecker
 from kattistools.checkers.check_input_validator import CheckInputValidator
 from kattistools.checkers.check_data_yaml import CheckDataYAML
+from kattistools.checkers.check_yaml_duplicate_keys import CheckYAMLDuplicateKeys
 from kattistools.checkers.check_data import CheckData
 from kattistools.checkers.check_consistent_source import ConsistentSourceChecker
 from kattistools.checkers.check_unique_uuid import UniqueUUIDChecker
@@ -45,6 +46,7 @@ per_problem_checkers = [
     CheckCPPTemplate,
     CheckInputValidator,
     CheckDataYAML,
+    CheckYAMLDuplicateKeys,
     CheckData
 ]
 
