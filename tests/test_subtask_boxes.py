@@ -18,14 +18,23 @@ def test_subtask_boxes():
         run_checkers(args, [checker], [], [], collect_error)
         return errors
     bad_root = Path(__file__).parent / 'problems' / 'subtask_boxes' / 'bad'
+    good_root = Path(__file__).parent / 'problems' / 'subtask_boxes' / 'good'
     
     for p in ["1", "2"]:
         errs = check(bad_root / "typo_swedish" / p, check_statement_po.CheckStatementPO)
-        assert 'Likely typo: you wrote' in ''.join(errs)
+        assert 'Last subtask in subtask box should' in ''.join(errs)
 
     for p in ["1", "2"]:
         errs = check(bad_root / "typo_english" / p, check_statement_po.CheckStatementPO)
-        assert 'Likely typo: you wrote' in ''.join(errs)
+        assert 'Last subtask in subtask box should' in ''.join(errs)
+
+    for p in ["1", "2"]:
+        errs = check(bad_root / "last_subtask_english" / p, check_statement_po.CheckStatementPO)
+        assert 'Last subtask in subtask box should' in ''.join(errs)
+
+    for p in ["1", "2"]:
+        errs = check(good_root / "last_subtask_english" / p, check_statement_po.CheckStatementPO)
+        assert 'subtask box' not in ''.join(errs)
 
     for p in ["1", "2", "3", "4", "5"]:
         errs = check(bad_root / "ampersand" / p, check_subtask_box.CheckSubtaskBox)

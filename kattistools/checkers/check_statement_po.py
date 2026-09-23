@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.common import edit_distance, count_subtasks
+from kattistools.common import count_subtasks
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 from kattistools.checkers.check_subtask_box import parse_subtask_box
@@ -50,11 +50,7 @@ class CheckStatementPO(Checker):
                     self.print_warning(f"(sv) Has Poängsättning-section, but improper scoring text. Want \n{scoring_text[1]}\n{scoring_text[2]}")
 
             if box := parse_subtask_box(path):
-                LAST_SUBTASK_TEXT = "Inga ytterligare begränsningar."
-                for line in box.subtask_lines:
-                    constraints = line.constraints.strip()
-                    if 1 <= edit_distance(LAST_SUBTASK_TEXT, constraints) < 4:
-                        self.print_warning(f"(sv) Likely typo: you wrote \"{constraints}\" in subtask box, you want \"{LAST_SUBTASK_TEXT}\"")
+                self.check_subtask_constraints(box, "sv", "Inga ytterligare begränsningar.")
 
 
     def handle_english(self, path):
@@ -88,11 +84,14 @@ class CheckStatementPO(Checker):
                     self.print_warning(f"(en) Has Scoring-section, but improper scoring text. Want \n{scoring_text[1]}\n{scoring_text[2]}")
 
             if box := parse_subtask_box(path):
-                LAST_SUBTASK_TEXT = "No additional constraints."
-                for line in box.subtask_lines:
-                    constraints = line.constraints.strip()
-                    if 1 <= edit_distance(LAST_SUBTASK_TEXT, constraints) < 4:
-                        self.print_warning(f"(en) Likely typo: you wrote \"{constraints}\" in subtask box, you want \"{LAST_SUBTASK_TEXT}\"")
+                self.check_subtask_constraints(box, "en", "No additional constraints.")
+
+    def check_subtask_constraints(self, box, lang, last_subtask_text):
+        if not box.subtask_lines:
+            return
+        constraints = box.subtask_lines[-1].constraints.strip()
+        if constraints != last_subtask_text and "$" not in constraints:
+            self.print_warning(f"({lang}) Last subtask in subtask box should either say exactly \"{last_subtask_text}\" or contain math, got \"{constraints}\"")
 
     def handle_problem(self, path):
         self.add_message_condition(self.is_po_problem)
