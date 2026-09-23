@@ -1,14 +1,40 @@
 from pathlib import Path
+import os
 
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
+
+# Kattis refuses to install problems with more test data than this
+MAX_TESTDATA_MIB = 1024
 
 class CheckData(Checker):
     def __init__(self, path: Path, args: Args):
         super().__init__("Data", path, args)
         self.handle_problem(path)
 
+    def check_testdata_size(self, path: Path):
+        # Mirrors Kattis: .in and .ans of every test case (.ans with a matching .in).
+        # Kattis counts identical files once; we only count symlinked files once
+        sizes = {}
+        for root, _, names in os.walk(path / 'data', followlinks=True):
+            for name in names:
+                ans = Path(root) / name
+                if ans.suffix == '.ans' and ans.with_suffix('.in').is_file():
+                    try:
+                        for f in (ans.with_suffix('.in').stat(), ans.stat()):
+                            sizes[f.st_dev, f.st_ino] = f.st_size
+                    except FileNotFoundError:
+                        # Broken symlink
+                        pass
+
+        size = sum(sizes.values())
+        if size > MAX_TESTDATA_MIB * 1024 * 1024:
+            self.print_error(f"Test data is {size / 1024 / 1024:.1f} MiB, Kattis refuses to install problems with more than {MAX_TESTDATA_MIB} MiB")
+
     def handle_problem(self, path: Path):
+        if (path / 'data').exists():
+            self.check_testdata_size(path)
+
         sample_path = path / 'data' / 'sample'
         if not sample_path.exists():
             return
