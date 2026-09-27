@@ -33,8 +33,8 @@ def parse_subtask_box(statement_path: Path, checker: Checker | None = None) -> S
         "sv": r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline",
         "en": r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"
     }
-    HEADER_FORMAT = re.compile(r"\\begin\{tabular\}\{\|\s*l\s*\|\s*l\s*\|\s*p\{12cm\}\s*\|\}")
-    HUMAN_READABLE_HEADER_FORMAT = r"\begin{tabular}{| l | l | p{12cm} |}"
+    HEADER_FORMAT = re.compile(r"\\begin\{tabular\}\{\|\s*c\s*\|\s*c\s*\|\s*l\s*\|\}")
+    HUMAN_READABLE_HEADER_FORMAT = r"\begin{tabular}{| c | c | l |}"
     SUBTASK_BOX_END = r"\end{tabular}"
     column_header_re = HEADER_LINES[lang]
 
@@ -70,6 +70,13 @@ def parse_subtask_box(statement_path: Path, checker: Checker | None = None) -> S
             checker.print_warning(f"({lang}) did not close subtask box with ' {SUBTASK_BOX_END} '")
         return None
     end = min(end)
+
+    before = [line.strip() for line in lines[:start] if line.strip()]
+    after = [line.strip() for line in lines[end+1:] if line.strip()]
+    if not before or before[-1] != r"\begin{center}" or not after or after[0] != r"\end{center}":
+        if checker:
+            checker.print_warning(f"({lang}) subtask box in {statement_path.name} is not centered. Wrap it in \\begin{{center}} ... \\end{{center}}")
+
     subtask_lines = lines[start+3:end]
     if len(subtask_lines) == 0:
         if checker:
