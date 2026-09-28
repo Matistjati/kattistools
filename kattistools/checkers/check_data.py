@@ -45,7 +45,17 @@ class CheckData(Checker):
                 if len(line) and line[-1].isspace():
                     self.print_warning(f"Sample file '{statement_file.relative_to(path)}' has trailing whitespace")
 
+        self.check_interaction_leading_whitespace(path, sample_path)
         self.check_sample_copies_sort_first(path)
+
+    def check_interaction_leading_whitespace(self, path: Path, sample_path: Path):
+        # Everything after the '<' or '>' is shown verbatim in the statement,
+        # so '< 1 2' renders as ' 1 2'
+        for interaction_file in sorted(sample_path.glob('*.interaction')):
+            for line in interaction_file.read_text().splitlines():
+                if line[:1] in ('<', '>') and line[1:2].isspace():
+                    self.print_error(f"Sample file '{interaction_file.relative_to(path)}' has whitespace after '<'/'>' (it will show up as leading whitespace in the statement)")
+                    break
 
     def check_sample_copies_sort_first(self, path: Path):
         # One should do include_group sample as good hygiene
