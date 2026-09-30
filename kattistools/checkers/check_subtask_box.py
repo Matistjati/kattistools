@@ -33,8 +33,12 @@ def parse_subtask_box(statement_path: Path, checker: Checker | None = None) -> S
         "sv": r"  \textbf{Grupp} & \textbf{Poäng} & \textbf{Gränser} \\ \hline",
         "en": r"  \textbf{Group} & \textbf{Points} & \textbf{Constraints} \\ \hline"
     }
-    HEADER_FORMAT = re.compile(r"\\begin\{tabular\}\{\|\s*c\s*\|\s*c\s*\|\s*l\s*\|\}")
-    HUMAN_READABLE_HEADER_FORMAT = r"\begin{tabular}{| c | c | l |}"
+    HEADER_FORMAT = re.compile(r"\\begin\{tabular\}\{\|\s*c\s*\|\s*c\s*\|\s*(?:l|p\{[^}]*\})\s*\|\}")
+    # In the HTML render, l and p{12cm} render the same
+    # If we just use l in a pdf, long constraint can overflow the text outside the page
+    # On the other hand, p{12cm} looks less nice if the constraints are all short
+    # We choose p{12cm}, since a statement being unreadable is worse than looking slightly ugly
+    HUMAN_READABLE_HEADER_FORMAT = r"\begin{tabular}{| c | c | p{12cm} |}"
     SUBTASK_BOX_END = r"\end{tabular}"
     column_header_re = HEADER_LINES[lang]
 
