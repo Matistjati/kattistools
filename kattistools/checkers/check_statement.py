@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import string
 
 from kattistools.common import get_statements, get_known_statement_names, get_language_code
@@ -7,6 +8,30 @@ from kattistools.args import Args
 
 def any_has(lines, needle):
     return any(needle in line for line in lines)
+
+def remove_texttt_content(text):
+    """Remove all content inside \texttt{...}, including nested braces and across multiple lines."""
+    tokens = []
+    texttt_level = 0
+    i = 0
+    while i < len(text):
+        if text.startswith(r"\texttt{", i):
+            i += len(r"\texttt{")
+            texttt_level += 1
+            continue
+        elif text[i] == '{':
+            if texttt_level > 0:
+                texttt_level += 1
+        elif text[i] == '}':
+            if texttt_level > 0:
+                texttt_level -= 1
+                i += 1
+                continue
+
+        if texttt_level == 0:
+            tokens.append(text[i])
+        i += 1
+    return ''.join(tokens)
 
 class CheckStatement(Checker):
     def __init__(self, path: Path, args: Args):
@@ -27,89 +52,85 @@ class CheckStatement(Checker):
         if total_len <= 100:
             self.print_warning(f"({get_language_code(statement_path)}) statement is unreasonably short ({total_len} chars)")
 
+    def read_prose(self, statement_path):
+        """The statement without comments and \\texttt (literal code), which follow no prose conventions."""
+        with open(statement_path, "r") as f:
+            text = f.read()
+        text = re.sub(r"(?<!\\)%.*", "", text)
+        return remove_texttt_content(text)
+
+    def check_ellipsis(self, statement_path, language):
+        text = self.read_prose(statement_path)
+        occurrences = {m.group(0).strip() for m in re.finditer(r"[^\n]{0,20}(\.\.\.|…)", text)}
+        for occurrence in sorted(occurrences):
+            self.print_warning(f"({language}) Prefer \\dots over ... or …: {occurrence}")
+
     def check_quotes(self, statement_path, language):
-        def remove_texttt_content_multiline(path):
-            with open(path, "r") as f:
-                lines = f.readlines()
-            """Remove all content inside \texttt{...}, including nested braces and across multiple lines."""
-            result = []
-            texttt_level = 0
-            for line in lines:
-                i = 0
-                tokens = []
-                while i < len(line):
-                    if line.startswith(r"\texttt{", i):
-                        i += len(r"\texttt{")
-                        texttt_level += 1
-                        continue
-                    elif line[i] == '{':
-                        if texttt_level > 0:
-                            texttt_level += 1
-                    elif line[i] == '}':
-                        if texttt_level > 0:
-                            texttt_level -= 1
-                            i += 1
-                            continue
+        def shorten(quoted):
+            quoted = ' '.join(quoted.split())
+            return quoted if len(quoted) <= 60 else quoted[:57] + '...'
 
-                    if texttt_level == 0:
-                        tokens.append(line[i])
-                    i += 1
-                
-                if tokens:
-                    result.append(''.join(tokens))
-            return set(result)
+        # Math can't contain prose quotes, and f''(x) is a double prime
+        text = self.read_prose(statement_path)
+        text = re.sub(r"(?<!\\)\$\$.*?(?<!\\)\$\$", " ", text, flags=re.DOTALL)
+        text = re.sub(r"(?<!\\)\$.*?(?<!\\)\$", " ", text, flags=re.DOTALL)
 
-        lines = self.get_unique_lines(statement_path)
-        texttt_free_lines = remove_texttt_content_multiline(statement_path)
-
-        weird_quotes = ["’", "’"]
-        for quote in weird_quotes:
-            if any_has(lines, quote):
-                self.print_error(f"({language}) Don't use {quote}")
-
-        all_quotes = ["’", "’", "\"", "”", "''", "``"]
-        for quote in all_quotes:
-            if any_has(lines, f",{quote}"):
-                self.print_error(f"({language}) Chatgpt error: ,{quote} occurs")
-            
-            if any_has(lines, f".{quote}"):
-                self.print_error(f"({language}) Chatgpt error: .{quote} occurs")
-
-        forbidden_quotes = [("’","’"), ("\"","\""), ("”", "”")]
-        if language=="sv":
-            correct_quote = ("''","''")
-            forbidden_quotes.append(("``", "''"))
-        elif language=="en":
+        if language == "sv":
+            correct_quote = ("''", "''")
+            forbidden_quotes = [("``", "''")]
+        elif language == "en":
             correct_quote = ("``", "''")
-            forbidden_quotes.append(("''","''"))
+            forbidden_quotes = [("''", "''")]
         else:
+            correct_quote = None
+
+        # Quote-like characters that don't match the LaTeX quotes, mapped to what to use instead
+        replacements = {
+            "‘": "`" if language == "en" else "'",
+            "’": "'",
+            "´": "'",
+            "′": "$'$",
+            "″": "$''$",
+        }
+        # Correct in e.g. German or French, so only forbid them where we know the right quotes
+        if correct_quote is not None:
+            for quote in ["„", "‚", "«", "»"]:
+                replacements[quote] = f"{correct_quote[0]}word{correct_quote[1]}"
+
+        for quote, replacement in replacements.items():
+            if quote in text:
+                self.print_warning(f"({language}) Don't use {quote}, use {replacement} instead")
+
+        # Punctuation inside the closing quote (``hello,'') looks like part of the quoted text,
+        # which is confusing when the quote is e.g. an exact string to print. This includes ellipses.
+        punctuation_in_quote = re.compile(r"(\S{0,20}?)(\.\.\.|…|\\l?dots(?:\{\})?|[.,;:])(''|'|[\"”’])")
+        bad_endings = set()
+        for m in punctuation_in_quote.finditer(text):
+            before, punctuation, quote = m.groups()
+            bad_endings.add((f"{before}{punctuation}{quote}", f"{before}{quote}{punctuation}"))
+        for bad, good in sorted(bad_endings):
+            self.print_warning(f"({language}) Put punctuation after the closing quote: write {good} instead of {bad}")
+
+        if correct_quote is None:
             return
+        forbidden_quotes += [('"', '"'), ("“", "”"), ("”", "”")]
 
-        for quote in forbidden_quotes:
-            if quote[0] == '\"':
-                lines_used = texttt_free_lines
-            else:
-                lines_used = lines
+        # In English, '' both closes correct quotes and opens forbidden ones, so drop correct pairs first
+        if language == "en":
+            text = re.sub(r"``.*?''", " ", text, flags=re.DOTALL)
 
-            if any_has(lines_used, quote[0]):
-                ln = [i for i in lines_used if i.count(quote[0])>0]
-                if len(ln)==0:
-                    self.print_error(f"({language}) Don't use {quote[0]}word{quote[1]}, use {correct_quote[0]}word{correct_quote[1]} instead")
+        for open_quote, close_quote in forbidden_quotes:
+            if open_quote not in text:
+                continue
 
-                unique_w = set()
-                for w in ln:
-                    wl = quote[0].join(w.split(quote[0])[1:])
-
-                    if wl.count(quote[1]) == 0:
-                        continue
-                    word = wl.split(quote[1])[0]
-
-                    if correct_quote[0] in word:
-                        continue
-                    unique_w.add(word)
-
-                for w in unique_w:
-                    self.print_error(f"({language}) Don't use {quote[0]}{w}{quote[1]}, use {correct_quote[0]}{w}{correct_quote[1]} instead")
+            pattern = re.escape(open_quote) + "(.*?)" + re.escape(close_quote)
+            quoted_words = {shorten(m) for m in re.findall(pattern, text, flags=re.DOTALL)}
+            # Drop matched pairs so later patterns (e.g. ”…” after “…”) don't match across them
+            text = re.sub(pattern, " ", text, flags=re.DOTALL)
+            if not quoted_words:
+                self.print_warning(f"({language}) Don't use {open_quote}word{close_quote}, use {correct_quote[0]}word{correct_quote[1]} instead")
+            for w in sorted(quoted_words):
+                self.print_warning(f"({language}) Don't use {open_quote}{w}{close_quote}, use {correct_quote[0]}{w}{correct_quote[1]} instead")
 
     # Check for 10^18 and similar
     def check_exponents(self, statement_path, language):
@@ -160,6 +181,7 @@ class CheckStatement(Checker):
     def handle_all(self, path, language):
         self.check_statement_length(path)
         self.check_quotes(path, language)
+        self.check_ellipsis(path, language)
         self.check_exponents(path, language)
         self.check_subsection(path)
 
