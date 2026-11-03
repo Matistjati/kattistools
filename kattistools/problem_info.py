@@ -3,6 +3,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 
 from rich.console import Console
+from rich.text import Text
 
 from kattistools.checkers.check_subtask_box import parse_subtask_box
 from kattistools.common import get_generator, gather_problems
@@ -287,7 +288,9 @@ def add_table_row(table, info: ProblemInfo, args) -> None:
     if args.lang:
         row.append(", ".join(info.languages) if info.languages else "N/A")
     if args.uuid:
-        row.append(info.uuid)
+        # no_wrap on the Text (not the column) keeps it on one line while
+        # letting rich treat the column as shrinkable, so it collapses first
+        row.append(Text(info.uuid, no_wrap=True, overflow="ellipsis"))
     table.add_row(*row, style="on grey7" if table.row_count % 2 else "")
 
 
@@ -352,7 +355,8 @@ if __name__ == "__main__":
     if args.lang:
         table.add_column("Languages", justify="left", no_wrap=True)
     if args.uuid:
-        table.add_column("UUID", justify="left", no_wrap=True)
+        # Only wrappable column, so rich shrinks it (truncating the suffix) before others
+        table.add_column("UUID", justify="left", overflow="ellipsis")
 
     print_collisions(console, problems)
 
