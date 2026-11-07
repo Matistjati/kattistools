@@ -127,9 +127,11 @@ class ProblemYamlChecker(Checker):
                 self.print_error("Having programmeringsolympiaden as author is bad practice (problem.yaml)")
             for char in disallowed_author_special_chars:
                 if char in author_name:
-                    self.print_error(f"Problem author should not contain {char}")
+                    self.print_error(f"Problem author should not contain special character {char}")
             if '&' in author_name:
                 self.print_error('Use comma to separate author names, not &')
+        else:
+            self.print_warning('\'problem.yaml\' has no author')
 
         is_scoring = False
         if 'type' in problem_yaml:
