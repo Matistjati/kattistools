@@ -58,7 +58,7 @@ def gitignored(path: Path, files: list[str]) -> set[str]:
         return set()
     return {f.decode() for f in result.stdout.split(b'\0') if f}
 
-SOURCES_GEN_SH = re.compile(r'\s*(\.|source)\s+\S*gen\.sh\b')
+SOURCES_GEN_SH = re.compile(r'\s*(?:\.|source)\s+(\S*gen\.sh)\b')
 
 def is_generator(file: Path) -> bool:
     if not file.is_file():
@@ -158,6 +158,9 @@ class Generator:
     path: Path
     text: str
     groups: list[GeneratorGroup]
+    # Where testdata_tools' gen.sh is included: 0-based line index and the path as written
+    gen_sh_line: int | None
+    gen_sh_path: str | None
 
     def is_skolkval_generator(self):
         return self.path.name == 'generator_skolkval.sh'
@@ -206,7 +209,13 @@ def parse_generator(file: Path, checker: "Checker | None" = None) -> Generator:
                         checker.print_error("Malformed generator: has 'include_group' before first group definition")
     if group:
         groups.append(group)
-    return Generator(file, generator_text, groups)
+
+    gen_sh_line, gen_sh_path = None, None
+    for i, line in enumerate(generator_text.split('\n')):
+        if m := SOURCES_GEN_SH.match(line):
+            gen_sh_line, gen_sh_path = i, m.group(1).strip('"\'')
+            break
+    return Generator(file, generator_text, groups, gen_sh_line, gen_sh_path)
 
 
 # Number of subtasks according to secret

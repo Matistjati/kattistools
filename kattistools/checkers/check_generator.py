@@ -1,8 +1,14 @@
 from pathlib import Path
+import re
 
 from kattistools.common import get_generator, parse_generator, get_secret_group_paths
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
+
+# set -e, set -euo pipefail, set -o errexit
+SET_E = re.compile(r'\s*set\s+(-[a-zA-Z]*e|-o\s+errexit)')
+# cd "$(dirname "$0")", matched with the double quotes removed
+CD_TO_SCRIPT_DIR = re.compile(r'\s*cd\s+(--\s+)?\$\(dirname\s+(--\s+)?(\$0|\$\{BASH_SOURCE\[0\]\}|\$BASH_SOURCE)\)')
 
 class GeneratorChecker(Checker):
     def __init__(self, path: Path, args: Args):
@@ -35,6 +41,16 @@ class GeneratorChecker(Checker):
 
         if "PPATH" in generator.text:
             self.print_warning("Generator: PPATH is deprecated")
+
+        # Check: how testdata_tools' gen.sh is included
+        if generator.gen_sh_line is not None:
+            lines_before = generator.text.split('\n')[:generator.gen_sh_line]
+            if generator.gen_sh_path.startswith(('/', '$', '~')):
+                self.print_warning(f"Generator: gen.sh is included with a non-relative path ('{generator.gen_sh_path}')")
+            if not any(SET_E.match(line) for line in lines_before):
+                self.print_warning("Generator: no 'set -e' before including gen.sh")
+            if not any(CD_TO_SCRIPT_DIR.match(line.replace('"', '')) for line in lines_before):
+                self.print_warning("Generator: no 'cd \"$(dirname \"$0\")\"' before including gen.sh")
 
         # Check: there should be no REQUIRE_SAMPLE_REUSE
         if not generator.is_skolkval_generator():
