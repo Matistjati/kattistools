@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import hashlib
 
-from kattistools.common import get_statements, gitignored
+from kattistools.common import gitignored, get_generator
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 
@@ -43,10 +43,22 @@ class CheckFiles(Checker):
         if sha256_hash != expected_validator_hash:
             self.print_warning(f"Outdated 'validate.h' in output validator. Get the newest from 'testdata_tools'")
 
+    def check_data_folder_exists(self, problem_root: Path):
+        data_path = problem_root / 'data'
+        if not data_path.exists():
+            self.print_error("Problem has no 'data' folder")
+            return False
+        return True
+
+    def check_generator(self, problem_root: Path):
+        data_path = problem_root / 'data'
+        gen = get_generator(data_path)
+        if gen is None:
+            self.print_warning("Couldn't find generator for problem")
 
     def check_testdata_root(self, path):
         if (path / "testdata.yaml").exists():
-            self.print_error("testdata.yaml in root")
+            self.print_error("There is a testdata.yaml in problem root, which is not supported")
 
     def check_statements(self, path):
         statement_path = path / "problem_statement"
@@ -60,10 +72,8 @@ class CheckFiles(Checker):
         if not (statement_path / "problem.en.tex").exists():
             self.print_warning("'problem.en.tex' is missing")
 
-    def check_testdata(self, path):
-        data_path = path / 'data'
-        if not data_path.exists():
-            self.print_error("Problem has no test data")
+    def check_testdata(self, problem_root: Path):
+        data_path = problem_root / 'data'
 
         if not (data_path / 'secret').exists():
             self.print_warning("'data/secret' does not exist")
@@ -135,7 +145,9 @@ class CheckFiles(Checker):
 
 
     def handle_problem(self, path):
-        self.check_testdata(path)
+        if self.check_data_folder_exists(path):
+            self.check_testdata(path)
+            self.check_generator(path)
         self.check_input_validator(path)
         self.check_output_validator(path)
         self.check_testdata_root(path)

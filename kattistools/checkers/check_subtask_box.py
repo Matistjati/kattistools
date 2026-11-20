@@ -1,7 +1,7 @@
 from pathlib import Path
 import re
 
-from kattistools.common import get_statements, get_language_code, count_subtasks, has_secret_data, format_score
+from kattistools.common import get_statements, get_language_code, get_secret_group_paths, has_secret_data, format_score, problem_uses_skolkval_data
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 from dataclasses import dataclass
@@ -148,7 +148,7 @@ class CheckSubtaskBox(Checker):
     def handle_problem(self, path: Path):
         self.add_message_condition(self.is_po_problem)
 
-        if count_subtasks(path) == 1:
+        if len(get_secret_group_paths(path)) == 1:
             return
 
         statement_path = path / 'problem_statement'
@@ -172,6 +172,6 @@ class CheckSubtaskBox(Checker):
 
                 expected_group += 1
 
-            if has_secret_data(path):
-                if len(box.subtask_lines) != count_subtasks(path):
+            if has_secret_data(path) and not problem_uses_skolkval_data(path):
+                if len(box.subtask_lines) != len(get_secret_group_paths(path)):
                     self.print_error(f"({get_language_code(statement)}) subtask box number of subtasks does not match number of subtasks in secret")

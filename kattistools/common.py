@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 import subprocess
 import yaml
+from dataclasses import dataclass
 
 EXCLUDED_DIRS = [".git", "testdata_tools"]
 
@@ -64,9 +65,6 @@ def is_generator(file: Path) -> bool:
         return False
     if file.suffix not in {".dsl", ".bash", ".sh"}:
         return False
-    # Skolkval generators are only temporary
-    if "skolkval" in file.name:
-        return False
     with open(file, "r") as f:
         lines = f.readlines()
     # Sometimes, people add a modified testdata_tools generator
@@ -77,11 +75,40 @@ def is_generator(file: Path) -> bool:
     # . ../../gen.sh
     return any(SOURCES_GEN_SH.match(line) for line in lines)
 
-def get_generator(data_path: Path):
-    for item in data_path.glob('*'):
-        if is_generator(item):
-            return item
-    return None
+def get_generator(data_path: Path) -> Path | None:
+    assert data_path.name == 'data'
+    generators = sorted([p for p in data_path.glob('*') if is_generator(p)])
+    if len(generators) == 0:
+        return None
+    if len(generators) == 1:
+        return generators[0]
+    # Assume we only hit this path if problem has both generator.sh and generator_skolkval.sh
+    if not (data_path / 'secret').exists(): # generator.sh comes first lexicographically
+        return generators[0]
+    secret_group_names = [p.name for p in get_secret_group_paths(data_path.parent)]
+    secret_group_scores = [get_secret_group_score(p) for p in get_secret_group_paths(data_path.parent)]
+    scored_generators = []
+    for generator in generators:
+        parsed_gen = parse_generator(generator)
+        if not parsed_gen:
+            continue
+        group_names = [group.name for group in parsed_gen.groups]
+        group_scores = [group.score for group in parsed_gen.groups]
+        num_matches = 0
+        if group_names == secret_group_names:
+            num_matches += 1
+            if group_scores == secret_group_scores:
+                num_matches += 1
+        scored_generators.append((num_matches, generator))
+
+    return max(scored_generators, key=lambda t: t[0])[1]
+
+def problem_uses_skolkval_data(problem_root: Path):
+    if gen := get_generator(problem_root / 'data'):
+        if parsed_gen := parse_generator(gen):
+            return parsed_gen.is_skolkval_generator()
+    return False
+
 
 def is_statement(file: Path) -> bool:
     if not file.is_file():
@@ -120,10 +147,87 @@ def get_language_code(path):
     raise Exception(f"Could not find language code for {path}")
 
 
+@dataclass
+class GeneratorGroup:
+    name: str
+    score: int | None
+    includes: list[str]
+
+@dataclass
+class Generator:
+    path: Path
+    text: str
+    groups: list[GeneratorGroup]
+
+    def is_skolkval_generator(self):
+        return self.path.name == 'generator_skolkval.sh'
+
+def parse_generator(file: Path, checker: "Checker | None" = None) -> Generator:
+    assert file.exists()
+    with open(file, "r") as f:
+        generator_text = f.read()
+    groups = []
+    group = None
+    for line in generator_text.split('\n'):
+        toks = line.split()
+        if len(toks):
+            if toks[0] == "group":
+                if group:
+                    groups.append(group)
+                    group = None
+                score = None
+                if len(toks) == 1:
+                    if checker:
+                        checker.print_error("Malformed generator: contains line with only 'group'")
+                    continue # Give up trying to parse this group
+                elif len(toks) == 2:
+                    if checker:
+                        checker.print_warning("Malformed generator: contains group without score")
+                    group_name = toks[1]
+                else:
+                    group_name = toks[1]
+                    try:
+                        score = int(toks[2])
+                    except:
+                        if checker:
+                            checker.print_warning(f"Malformed generator: failed to parse group score {toks[2]} as int")
+
+                group = GeneratorGroup(group_name, score, [])
+            elif toks[0] == 'include_group':
+                if group:
+                    for included_group in toks[1:]:
+                        if any(group.name == included_group for group in groups) or included_group == 'sample':
+                            group.includes.append(included_group)
+                        else:
+                            if checker:
+                                checker.print_error(f"Malformed generator: group {group.name} includes group {included_group} that is not yet defined")
+                else:
+                    if checker:
+                        checker.print_error("Malformed generator: has 'include_group' before first group definition")
+    if group:
+        groups.append(group)
+    return Generator(file, generator_text, groups)
+
+
 # Number of subtasks according to secret
-def count_subtasks(problem_path: Path):
+def get_secret_group_paths(problem_path: Path) -> list[Path]:
     secret_path = problem_path / 'data' / 'secret'
-    return len([path for path in secret_path.glob('*') if path.is_dir()])
+    return list(sorted([path for path in secret_path.glob('*') if path.is_dir()]))
+
+def get_secret_group_score(group_path: Path) -> int | None:
+    yaml_path = group_path / 'testdata.yaml'
+    if not yaml_path.exists():
+        return None
+    with open(yaml_path, 'r') as f:
+        for line in f.readlines():
+            if line.startswith('accept_score'):
+                toks = line.split(': ')
+                if len(toks) == 2:
+                    try:
+                        return int(toks[1])
+                    except Exception:
+                        ...
+    return None
 
 def format_score(score: float) -> str:
     return str(int(score)) if float(score).is_integer() else str(score)

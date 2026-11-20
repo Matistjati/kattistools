@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.common import get_generator
+from kattistools.common import get_generator, parse_generator, get_secret_group_paths
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 
@@ -14,14 +14,14 @@ class GeneratorChecker(Checker):
         if not data_path.exists():
             return
 
-        # Find the order of subtask defined in generator (order expected by author)
         gen = get_generator(data_path)
-        if gen is None:
-            self.print_warning("Couldn't find generator for problem")
+        if not gen:
             return
+        generator = parse_generator(gen, self)
+        if generator.is_skolkval_generator():
+            self.print_error_if("Using skolkval generator", [self.perform_finalization_checks])
 
-        generator_text = gen.read_text()
-        if "sample_manual" in generator_text:
+        if "sample_manual" in generator.text:
             custom_validation = (path / 'output_validators').exists()
 
             with open(path / "problem.yaml", "r") as f:
@@ -33,17 +33,17 @@ class GeneratorChecker(Checker):
             if not custom_validation:
                 self.print_warning("Avoid using 'sample_manual' if there is no output validator")
 
-        if "PPATH" in generator_text:
+        if "PPATH" in generator.text:
             self.print_warning("Generator: PPATH is deprecated")
 
         # Check: there should be no REQUIRE_SAMPLE_REUSE
-        for line in generator_text.splitlines():
-            if line.startswith("REQUIRE_SAMPLE_REUSE=0"):
-                self.print_error("Generator has REQUIRE_SAMPLE_REUSE=0")
+        if not generator.is_skolkval_generator():
+            for line in generator.text.splitlines():
+                if line.startswith("REQUIRE_SAMPLE_REUSE=0"):
+                    self.print_error("Generator has REQUIRE_SAMPLE_REUSE=0")
 
-        generator_group_names = []
-        for line in filter(lambda line: line.startswith("group"), generator_text.splitlines()):
-            generator_group_names.append(line.split()[1])
+        # Find the order of subtask defined in generator (order expected by author)
+        generator_group_names = [group.name for group in generator.groups]
 
         # Find subtasks, and order the same as kattis
         secret_path = data_path / 'secret'
@@ -58,7 +58,7 @@ class GeneratorChecker(Checker):
             self.print_error_if("Generator is newer than secret data. You should re-run the generator.",
                                 [self.perform_finalization_checks])
 
-        secret_groups = sorted(p.stem for p in secret_path.glob('*/') if p.is_dir())
+        secret_groups = [p.name for p in get_secret_group_paths(path)]
 
         if len(secret_groups) != len(generator_group_names):
             self.print_error("Number of groups in generator and secret mismatch")

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from kattistools.common import count_subtasks
+from kattistools.common import get_secret_group_paths
 from kattistools.checkers.checker import Checker
 from kattistools.args import Args
 from kattistools.checkers.check_subtask_box import parse_subtask_box
@@ -27,7 +27,7 @@ class CheckStatementPO(Checker):
             self.print_error(r"(sv) missing \section*{Utdata}")
 
         # If no data, we don't know: assume no data generated, and check
-        if count_subtasks(self.path) > 1 or count_subtasks(self.path) == 0:
+        if len(get_secret_group_paths(self.path)) != 1:
             if not any_begins(lines, r"\section*{Poängsättning}"):
                 self.print_warning("(sv) missing poängsättning-section")
             else:
@@ -61,7 +61,7 @@ class CheckStatementPO(Checker):
             self.print_error(r"(en) missing \section*{Output}")
         
         # If no data, we don't know: assume no data generated, and check
-        if count_subtasks(self.path) > 1 or count_subtasks(self.path) == 0:
+        if len(get_secret_group_paths(self.path)) != 1:
             if not any_begins(lines, r"\section*{Scoring}"):
                 self.print_warning(r"(en) Missing \section*{Scoring}")
             else:
