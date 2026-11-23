@@ -66,7 +66,9 @@ class ProblemYamlChecker(Checker):
 
     def check_source_ioi_like(self, yaml, path: Path):
         known_olympiads = ["IOI", "CEOI", "BOI", "EGOI"]
-        if any(olympiad_name.lower() in part.lower() for part in path.resolve().parts for olympiad_name in known_olympiads):
+        exclusions = set(name.lower() for name in ["EGOI-qual"])
+        if any(olympiad_name.lower() in part.lower() for part in path.resolve().parts for olympiad_name in known_olympiads) \
+            and len(set(part.lower() for part in path.resolve().parts) & exclusions) == 0:
             desired_source = r"^[A-Z][a-zA-Z']*( [a-zA-Z']+)* \([A-Z]+\) \d{4}, (Day \d|Practice Contest)$"
             source = yaml.get("source", "")
             if re.match(desired_source, source) is None:
